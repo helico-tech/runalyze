@@ -18,7 +18,7 @@ export function efficiencySeries(output: Series, hr: Series, scale: number): Ser
   return makeSeries(t, v)
 }
 
-/** Centered moving average over a ±windowS/2 time window. */
+/** Centered moving average over a ±windowS/2 time span. */
 export function rollingMean(series: Series, windowS: number): Series {
   const { t, v } = series
   const n = t.length
