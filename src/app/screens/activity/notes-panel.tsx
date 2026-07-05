@@ -9,22 +9,18 @@ export function NotesPanel({
 }) {
   const [text, setText] = useState(initialText)
   const [saved, setSaved] = useState(false)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const first = useRef(true)
+  // Track the last-persisted value so we never save unchanged text — robust to
+  // StrictMode's double-invoked mount effect (a "first run" flag is not).
+  const lastSaved = useRef(initialText)
 
   useEffect(() => {
-    if (first.current) {
-      first.current = false
-      return
-    }
-    if (timer.current) clearTimeout(timer.current)
-    timer.current = setTimeout(() => {
+    if (text === lastSaved.current) return
+    const timer = setTimeout(() => {
       onSave(text)
+      lastSaved.current = text
       setSaved(true)
     }, 400)
-    return () => {
-      if (timer.current) clearTimeout(timer.current)
-    }
+    return () => clearTimeout(timer)
   }, [text, onSave])
 
   return (
