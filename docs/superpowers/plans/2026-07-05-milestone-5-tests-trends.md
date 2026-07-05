@@ -8,6 +8,18 @@
 
 **Tech Stack:** nothing new (SVG trends chart is hand-rolled, jsdom-testable; no uPlot needed for sparse test history).
 
+## Review amendments (apply during execution — supersede the task bodies below)
+
+Findings from the pre-execution review panel (executed the plan to 160 green with these):
+
+1. **AeT test assertion (Task 2, blocker):** `getByText(/at aet/i)` matches BOTH the "At AeT" badge and the "…sits at AeT…" guidance → throws. Use exact `getByText('At AeT')`.
+2. **No `onSaved` prop (Task 3):** ignore the discarded prop alternative. `Workspace` keeps its signature; save via a local `handleSaveResult` (`repo.saveTestResult` → `toast.success` → `store.getState().cancelTest()`). Library refreshes on its own mount.
+3. **Three startTest calls (Task 1):** the appended store test has THREE `startTest(...)` calls, not two — pass `'test-activity'` as the third arg to all three.
+4. **TrendChart shared y-domain (Task 4, major):** the threshold line must scale on the SAME y-domain as the points. In TrendChart derive one domain that includes the threshold and pass it to BOTH `scalePoints` calls: `const vs = points.map(p => p.v); const lo = Math.min(yMin ?? Math.min(...vs), threshold ?? Infinity); const hi = Math.max(yMax ?? Math.max(...vs), threshold ?? -Infinity);` then `scalePoints(points, W, H, PAD, lo, hi)` and `scalePoints([{t:0,v:threshold}], W, H, PAD, lo, hi)`. Guard the empty-points case (lo/hi finite).
+5. **Above-AeT accept copy (Task 2):** for the `above-aet` verdict the accept checkbox carries caution styling and override wording ("Force-accept despite HR being above AeT"); `below-aet` keeps neutral wording.
+
+**UX framing (user feedback 2026-07-05):** render the two test buttons under an "Analysis" label as an analysis-tool picker (AeT/AnT are the first tools), not two loose buttons. The AeT test is already a single draggable region that auto-splits into halves (spec §2.1) — no change needed there. (Deeper workspace UX — drag cursor cues, hover value readout, full-screen layout — is a separate polish pass, not this milestone.)
+
 ## Global Constraints
 
 - All milestone 1–4 Global Constraints apply (strict TS, domain purity grep — now also excludes `from 'uplot'`/`from 'zustand'`, TDD, commit style, `@/` alias, jsdom docblock, `TZ: 'UTC'`, no uPlot in vitest).
