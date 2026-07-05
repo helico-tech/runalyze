@@ -37,7 +37,7 @@
   - `efficiencySeries(output: Series, hr: Series, scale: number): Series` — for each HR sample with finite `hr > 0`, value = `scale * outputNearest / hr` where `outputNearest` is the output sample nearest that HR timestamp (via `nearestIndex`); samples with no finite output or `hr ≤ 0` are skipped. Timestamps are the retained HR sample times.
   - `rollingMean(series: Series, windowS: number): Series` — centered moving average over a `±windowS/2` time window (same timestamps; each point averaged over neighbours within the window). Empty in → empty out.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `src/domain/model/series.test.ts`:
 
@@ -110,9 +110,9 @@ describe('rollingMean', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail.**
+- [x] **Step 2: Run to verify fail.**
 
-- [ ] **Step 3: Implement.**
+- [x] **Step 3: Implement.**
 
 In `series.ts`, add (binary search, same logic that was in channel-values):
 
@@ -181,7 +181,7 @@ export function rollingMean(series: Series, windowS: number): Series {
 
 > Note: the sliding-window sum assumes `lo`/`hi` only advance forward, which holds because `t` is strictly increasing and the window bounds move monotonically with `i`. Verify the `rollingMean` test values match.
 
-- [ ] **Step 4: Verify pass; commit.**
+- [x] **Step 4: Verify pass; commit.**
 
 ```bash
 git add -A && git commit -m "feat(domain): efficiency series + rolling mean; move nearestIndex to the domain"
@@ -241,13 +241,13 @@ export interface AetEvaluation {
   - `evaluateAetTest(activity: Activity, window: TimeRange): AetEvaluation` — throws `Error(/missing channel: heartRate/)` when HR absent, and `Error(/no drift channel/)` when neither speed nor power present. Computes `pace` from speed (if present) and `power` from power (if present). `warnings`/`valid` as before (too-short / overlaps-exclusion invalidate; gaps warn — gaps computed from whichever channels are present, worst uncovered). `atAet = pace?.verdict === 'at-aet' || power?.verdict === 'at-aet'`. `suggestedAetHr = atAet ? Math.round(windowAvgHr) : null`.
   - `buildAetResult(args)` — drop `driftChannel`; build `pace`/`power` `AetChannelResult` (or null) from the evaluation; `aetHr = evaluation.suggestedAetHr ?? (args.acceptAetHr ? Math.round(evaluation.windowAvgHr) : null)`.
 
-- [ ] **Step 1: Rewrite the failing tests** (`aet-protocol.test.ts`) — the test activity has both speed and HR; add a variant with power. Assert `evaluateAetTest(a, WINDOW)` returns `pace.decoupling.decouplingPct ≈ 5.0`, `pace.verdict === 'at-aet'`, `atAet === true`, `suggestedAetHr === 154`; the warnings/validity cases unchanged (now without the driftChannel arg); the missing-channel case throws `/no drift channel/` when neither speed nor power present; `buildAetResult` stores `pace`/`power` and sets `aetHr` per the either-at-aet rule.
+- [x] **Step 1: Rewrite the failing tests** (`aet-protocol.test.ts`) — the test activity has both speed and HR; add a variant with power. Assert `evaluateAetTest(a, WINDOW)` returns `pace.decoupling.decouplingPct ≈ 5.0`, `pace.verdict === 'at-aet'`, `atAet === true`, `suggestedAetHr === 154`; the warnings/validity cases unchanged (now without the driftChannel arg); the missing-channel case throws `/no drift channel/` when neither speed nor power present; `buildAetResult` stores `pace`/`power` and sets `aetHr` per the either-at-aet rule.
 
-- [ ] **Step 2: Run to verify fail.**
+- [x] **Step 2: Run to verify fail.**
 
-- [ ] **Step 3: Implement** the model + protocol changes.
+- [x] **Step 3: Implement** the model + protocol changes.
 
-- [ ] **Step 4: Verify pass; commit.**
+- [x] **Step 4: Verify pass; commit.**
 
 ```bash
 git add -A && git commit -m "feat(domain): AeT stores both Pa:HR and Pw:HR verdicts; evaluate computes both channels"
@@ -267,9 +267,9 @@ git add -A && git commit -m "feat(domain): AeT stores both Pa:HR and Pw:HR verdi
 - `export-card.tsx` `TestExportCard`: for aet, show both Pa:HR and Pw:HR decoupling (each with its verdict label) instead of a single decoupling/verdict; the headline is the pace decoupling if present else power, and a small line lists both. Update the export-card test assertions accordingly (assert both `3.6%` for pace and the power value render).
 - `ads-assessment.test.ts` / `library-repository-contract.ts` / `ads-card.test.tsx`: update the AeT literals to the new shape (they only need `aetHr` for ADS; set `pace: { decouplingPct: 4.2, verdict: 'at-aet' }, power: null`).
 
-- [ ] **Step 1:** Update the literals + consumers.
-- [ ] **Step 2:** `npm test && npm run lint && npm run build` — all green.
-- [ ] **Step 3: Commit.**
+- [x] **Step 1:** Update the literals + consumers.
+- [x] **Step 2:** `npm test && npm run lint && npm run build` — all green.
+- [x] **Step 3: Commit.**
 
 ```bash
 git add -A && git commit -m "refactor: update all AetTestResult consumers to dual-channel shape"
@@ -289,9 +289,9 @@ git add -A && git commit -m "refactor: update all AetTestResult consumers to dua
 - `stats-panel.tsx`: drop the `driftChannel` prop; the sector block shows BOTH Pa:HR and Pw:HR decoupling (guarded "—" when the channel or HR is missing). Update `stats-panel.test.tsx`.
 - `channels.ts`: remove `driftChannelLabel` (now unused).
 
-- [ ] **Step 1:** Apply edits (tests first where they change assertions).
-- [ ] **Step 2:** `npm test && npm run lint && npm run build` — all green. Purity grep clean.
-- [ ] **Step 3: Commit.**
+- [x] **Step 1:** Apply edits (tests first where they change assertions).
+- [x] **Step 2:** `npm test && npm run lint && npm run build` — all green. Purity grep clean.
+- [x] **Step 3: Commit.**
 
 ```bash
 git add -A && git commit -m "feat(workspace): remove drift selector; AeT + stats show both Pa:HR and Pw:HR"
@@ -311,10 +311,10 @@ git add -A && git commit -m "feat(workspace): remove drift selector; AeT + stats
 - `activity-screen.tsx` rail: append efficiency toggle buttons (same styling) after the raw channel buttons.
 - `channel-values.ts`: extend `channelValuesAt` to append efficiency readouts (compute EF at the nearest sample) so the hover bar shows them too. (Keep it pure — pass the activity; compute the two EF values at `tS`.)
 
-- [ ] **Step 1:** Write/adjust tests: `channels.test.ts` asserts `efficiencyPresent` returns both when speed+power+HR present, none without HR; `channel-values.test.ts` asserts an efficiency value appears at a cursor time; `workspace-store.test.ts` visible set includes `efPace`/`efPower`.
-- [ ] **Step 2:** Implement.
-- [ ] **Step 3:** `npm test && npm run lint && npm run build` — all green. Purity grep clean (efficiency compute lives in domain; chart-stack imports domain fns).
-- [ ] **Step 4: Commit.**
+- [x] **Step 1:** Write/adjust tests: `channels.test.ts` asserts `efficiencyPresent` returns both when speed+power+HR present, none without HR; `channel-values.test.ts` asserts an efficiency value appears at a cursor time; `workspace-store.test.ts` visible set includes `efPace`/`efPower`.
+- [x] **Step 2:** Implement.
+- [x] **Step 3:** `npm test && npm run lint && npm run build` — all green. Purity grep clean (efficiency compute lives in domain; chart-stack imports domain fns).
+- [x] **Step 4: Commit.**
 
 ```bash
 git add -A && git commit -m "feat(workspace): Pa:HR and Pw:HR efficiency-curve chart panes with hover readout"
@@ -324,8 +324,8 @@ git add -A && git commit -m "feat(workspace): Pa:HR and Pw:HR efficiency-curve c
 
 ### Task 6: Visual verification
 
-- [ ] **Step 1:** `npm run dev`; playwright-cli: open the user run's workspace. Confirm: the drift selector is gone; the AeT test panel shows BOTH Pa:HR (3.6%, At AeT) and Pw:HR (2.4%, Below AeT) with per-channel verdicts; two efficiency-curve panes (Pa:HR eff, Pw:HR eff) render and toggle from the rail; the hover readout shows efficiency values; saving stores both (Trends test log shows both decouplings). Screenshot the dual-verdict panel and the efficiency curves.
-- [ ] **Step 2:** Fix defects; re-verify; commit.
+- [x] **Step 1:** `npm run dev`; playwright-cli: open the user run's workspace. Confirm: the drift selector is gone; the AeT test panel shows BOTH Pa:HR (3.6%, At AeT) and Pw:HR (2.4%, Below AeT) with per-channel verdicts; two efficiency-curve panes (Pa:HR eff, Pw:HR eff) render and toggle from the rail; the hover readout shows efficiency values; saving stores both (Trends test log shows both decouplings). Screenshot the dual-verdict panel and the efficiency curves.
+- [x] **Step 2:** Fix defects; re-verify; commit.
 
 ## Definition of done (milestone 7)
 
