@@ -378,6 +378,9 @@ export interface AntTestResult {
   /** integer bpm */
   antHr: number
   windowAvgHr: number
+  /** informational, sample-weighted over the window; null when the channel is absent or empty */
+  windowAvgSpeed: number | null
+  windowAvgPower: number | null
 }
 
 export type TestResult = AetTestResult | AntTestResult
@@ -1249,12 +1252,12 @@ git commit -m "feat(domain): AeT protocol - verdict bands, evaluation, result bu
 - Consumes: `windowStats`, `uncoveredS` (Task 3); `overlapsExclusion`, `rangeLengthS` (Task 2); constants (Task 3).
 - Produces:
   - `type AntWarning = 'window-too-short' | 'overlaps-exclusion' | 'gaps-in-window'`
-  - `interface AntEvaluation { antHr: number; windowAvgHr: number; warnings: AntWarning[]; valid: boolean }`
-  - `evaluateAntTest(activity: Activity, window: TimeRange): AntEvaluation` — throws on missing HR or unusable data
+  - `interface AntEvaluation { antHr: number; windowAvgHr: number; windowAvgSpeed: number | null; windowAvgPower: number | null; warnings: AntWarning[]; valid: boolean }`
+  - `evaluateAntTest(activity: Activity, testWindow: TimeRange): AntEvaluation` — throws on missing HR or unusable data; the parameter is named `testWindow` (never `window`) so the domain-purity grep for `window.` stays clean
   - `interface BuildAntArgs { id: string; activity: Activity; window: TimeRange; evaluation: AntEvaluation; createdAt: Date }`
   - `buildAntResult(args: BuildAntArgs): AntTestResult` — throws when `!evaluation.valid`; rounds `antHr` to integer bpm
 
-Rules (spec §2.2): `antHr = mean(HR)` over `[max(window.startS, window.endS − ANT_AVG_SPAN_S), window.endS)` (clamped so a too-short window never reads before its own start). Validity mirrors AeT: too-short (`< ANT_MIN_WINDOW_S`) or exclusion overlap invalidates; gaps (`uncoveredS(hr, window) > MAX_GAP_IN_WINDOW_S`) only warn.
+Rules (spec §2.2): `antHr = mean(HR)` over `[max(testWindow.startS, testWindow.endS − ANT_AVG_SPAN_S), testWindow.endS)` (clamped so a too-short window never reads before its own start). Validity mirrors AeT: too-short (`< ANT_MIN_WINDOW_S`) or exclusion overlap invalidates; gaps (`uncoveredS(hr, testWindow) > MAX_GAP_IN_WINDOW_S`) only warn. The saved result also carries informational sample-weighted `windowAvgSpeed`/`windowAvgPower` over the window (spec §2.2 "average pace/power over the window"), `null` when the channel is absent or has no weighted samples.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1265,12 +1268,13 @@ import { describe, expect, it } from 'vitest'
 import { syntheticActivity, syntheticSeries } from '../testing/synthetic'
 import { buildAntResult, evaluateAntTest } from './ant-protocol'
 
-// 10 min warmup-ish effort at 155, then 20 min at 168
+// 10 min warmup-ish effort at 155, then 20 min at 168; steady 3.4 m/s
 function ttActivity() {
   return syntheticActivity({
     durationS: 1800,
     channels: {
       heartRate: syntheticSeries({ durationS: 1800, value: (t) => (t < 600 ? 155 : 168) }),
+      speed: syntheticSeries({ durationS: 1800, value: () => 3.4 }),
     },
   })
 }
@@ -1281,6 +1285,8 @@ describe('evaluateAntTest', () => {
     const e = evaluateAntTest(ttActivity(), WINDOW)
     expect(e.antHr).toBe(168)
     expect(e.windowAvgHr).toBeCloseTo((600 * 155 + 1200 * 168) / 1800, 6)
+    expect(e.windowAvgSpeed).toBeCloseTo(3.4, 9)
+    expect(e.windowAvgPower).toBeNull()
     expect(e.valid).toBe(true)
     expect(e.warnings).toEqual([])
   })
@@ -1305,6 +1311,8 @@ describe('buildAntResult', () => {
     const r = buildAntResult({ id: 'r1', activity: a, window: WINDOW, evaluation: e, createdAt: new Date('2026-07-05T10:00:00Z') })
     expect(r.kind).toBe('ant')
     expect(r.antHr).toBe(168)
+    expect(r.windowAvgSpeed).toBeCloseTo(3.4, 9)
+    expect(r.windowAvgPower).toBeNull()
     expect(r.testDate).toEqual(a.startTime)
   })
 
@@ -1338,32 +1346,44 @@ export type AntWarning = 'window-too-short' | 'overlaps-exclusion' | 'gaps-in-wi
 export interface AntEvaluation {
   antHr: number
   windowAvgHr: number
+  /** informational, sample-weighted over the window; null when the channel is absent or empty */
+  windowAvgSpeed: number | null
+  windowAvgPower: number | null
   warnings: AntWarning[]
   valid: boolean
 }
 
-export function evaluateAntTest(activity: Activity, window: TimeRange): AntEvaluation {
+export function evaluateAntTest(activity: Activity, testWindow: TimeRange): AntEvaluation {
   const hr = activity.channels.heartRate
   if (!hr) throw new Error('missing channel: heartRate')
 
   const avgRange: TimeRange = {
-    startS: Math.max(window.startS, window.endS - ANT_AVG_SPAN_S),
-    endS: window.endS,
+    startS: Math.max(testWindow.startS, testWindow.endS - ANT_AVG_SPAN_S),
+    endS: testWindow.endS,
   }
   const antStats = windowStats(hr, avgRange)
-  const whole = windowStats(hr, window)
+  const whole = windowStats(hr, testWindow)
   if (antStats.weightS === 0 || whole.weightS === 0) {
     throw new Error('AnT window has no usable heart-rate data')
   }
 
+  const infoAvg = (kind: 'speed' | 'power'): number | null => {
+    const series = activity.channels[kind]
+    if (!series) return null
+    const stats = windowStats(series, testWindow)
+    return stats.weightS > 0 ? stats.mean : null
+  }
+
   const warnings: AntWarning[] = []
-  if (rangeLengthS(window) < ANT_MIN_WINDOW_S) warnings.push('window-too-short')
-  if (overlapsExclusion(activity, window)) warnings.push('overlaps-exclusion')
-  if (uncoveredS(hr, window) > MAX_GAP_IN_WINDOW_S) warnings.push('gaps-in-window')
+  if (rangeLengthS(testWindow) < ANT_MIN_WINDOW_S) warnings.push('window-too-short')
+  if (overlapsExclusion(activity, testWindow)) warnings.push('overlaps-exclusion')
+  if (uncoveredS(hr, testWindow) > MAX_GAP_IN_WINDOW_S) warnings.push('gaps-in-window')
 
   return {
     antHr: antStats.mean,
     windowAvgHr: whole.mean,
+    windowAvgSpeed: infoAvg('speed'),
+    windowAvgPower: infoAvg('power'),
     warnings,
     valid: !warnings.includes('window-too-short') && !warnings.includes('overlaps-exclusion'),
   }
@@ -1389,6 +1409,8 @@ export function buildAntResult(args: BuildAntArgs): AntTestResult {
     window: args.window,
     antHr: Math.round(evaluation.antHr),
     windowAvgHr: evaluation.windowAvgHr,
+    windowAvgSpeed: evaluation.windowAvgSpeed,
+    windowAvgPower: evaluation.windowAvgPower,
   }
 }
 ```
@@ -1458,6 +1480,8 @@ function ant(over: Partial<AntTestResult>): AntTestResult {
     window: { startS: 0, endS: 1800 },
     antHr: 165,
     windowAvgHr: 163.7,
+    windowAvgSpeed: 3.4,
+    windowAvgPower: null,
     ...over,
   }
 }
