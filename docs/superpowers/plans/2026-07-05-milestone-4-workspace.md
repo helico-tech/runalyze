@@ -17,6 +17,20 @@
 - Crosshair sync across panes: `cursor: { sync: { key } }` on every chart + one shared `uPlot.sync(key)` (static). Panes share the x **domain** (elapsed seconds), so sync aligns by value even with different sample counts.
 - `u.over` (`.u-over` div) is where mouse listeners attach; `u.destroy()` on unmount.
 
+## Review amendments (apply during execution — supersede the task bodies below)
+
+Findings from the pre-execution review panel (one agent executed the whole plan in a scratch copy):
+
+1. **Install uplot (Task 2 Step 1):** `npm install zustand uplot` — the plan imports uplot but never installed it.
+2. **jsdom matchMedia crash (blocker):** importing `uplot` runs `setPxRatio()`→`window.matchMedia` at module-eval, throwing under jsdom and regressing App/library-screen suites. Add `vitest.setup.ts` with a `window.matchMedia` stub (guarded by `typeof window !== 'undefined'`) and register `test.setupFiles: ['./vitest.setup.ts']` in vite.config.ts. The canvas guard does NOT prevent this (crash is at import, not construction).
+3. **applyDrag `create` narrowing (Task 1):** after the two trim guards add `if (target.kind === 'create') return { sectors, exclusions: ex }` before `const id = target.id` (TS2339 otherwise).
+4. **chart-stack store-in-state, not ref (Task 3/6):** `react-hooks/refs` (eslint-plugin-react-hooks v7) errors on reading `storeRef.current` during render. Use `const [store] = useState(() => createWorkspaceStore())`; replace every `storeRef.current` with `store`.
+5. **move-sector teleport bug (Task 3, correctness):** snapshot geometry at pointerdown — `dragRef.current = { target, grabTimeS: t, sectors0: store.getState().sectors, exclusions0: store.getState().exclusions }` — and in pointermove call `applyDrag(drag.target, drag.sectors0, drag.exclusions0, drag.grabTimeS, t, ...)`. Reading the live (already-mutated) store each move accumulates the delta and teleports the sector.
+6. **sync cleanup line (Task 3):** delete `sync.sub && sync.unsub?.(panes[0]!)` entirely — `p.destroy()` already unsubscribes each pane; the line fails both TS2774 and eslint no-unused-expressions.
+7. **unused `_meta` (Task 3):** drop the param → `attachInteractions(u: uPlot)`, call `attachInteractions(u)`, remove the now-unused `type ChannelMeta` import.
+8. **sector delete UI (Task 6, spec §4.2):** add a sector-chip row — each chip selects; an × calls `store.getState().removeSector(id)` (also removes it from the repo via the persistence delete-diff).
+9. **NotesPanel onSave stability (Task 6):** wrap the `onSave` passed to NotesPanel in `useCallback(..., [repo, activity.id])` so unrelated store changes don't re-persist the note.
+
 ## Global Constraints
 
 - All milestone 1–3 Global Constraints apply (strict TS, domain purity grep, TDD, commit style, `@/` alias, jsdom docblock for component tests, `TZ: 'UTC'`).
