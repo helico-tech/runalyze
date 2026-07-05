@@ -1,12 +1,16 @@
 import { useMemo } from 'react'
 import { ADS_GAP_THRESHOLD_PCT } from '../../../domain/analysis/protocol-constants'
-import type { AetTestResult, AntTestResult } from '../../../domain/model/types'
+import type { AetTestResult, AntTestResult, TestResult } from '../../../domain/model/types'
+import { ConfirmButton } from '../../components/confirm-button'
+import { useContainer } from '../../container-context'
 import { useTestResults } from '../../hooks'
+import { formatBpm, formatDate } from '../../format'
 import { TrendChart } from './trend-chart'
 import type { Point } from './trends-geometry'
 
 export function TrendsScreen() {
-  const { results } = useTestResults()
+  const { repo } = useContainer()
+  const { results, refresh } = useTestResults()
 
   const { aetHr, antHr, decoupling, gap } = useMemo(() => {
     const aets = results
@@ -41,19 +45,51 @@ export function TrendsScreen() {
     )
   }
 
+  const log = [...results].sort((a, b) => b.testDate.getTime() - a.testDate.getTime())
+  const keyValue = (r: TestResult) =>
+    r.kind === 'aet' ? `${r.decouplingPct.toFixed(1)}% · ${formatBpm(r.aetHr)}` : formatBpm(r.antHr)
+
   return (
-    <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2">
-      <TrendChart title="AeT HR" unit="bpm" points={aetHr} colorHex="#ff6b6b" />
-      <TrendChart title="AnT HR" unit="bpm" points={antHr} colorHex="#ff6b6b" />
-      <TrendChart title="AeT decoupling" unit="%" points={decoupling} colorHex="#4cc9f0" />
-      <TrendChart
-        title="ADS gap"
-        unit="%"
-        points={gap}
-        colorHex="#a78bfa"
-        yMin={0}
-        threshold={ADS_GAP_THRESHOLD_PCT}
-      />
+    <div className="mx-auto max-w-5xl space-y-8">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <TrendChart title="AeT HR" unit="bpm" points={aetHr} colorHex="#ff6b6b" />
+        <TrendChart title="AnT HR" unit="bpm" points={antHr} colorHex="#ff6b6b" />
+        <TrendChart title="AeT decoupling" unit="%" points={decoupling} colorHex="#4cc9f0" />
+        <TrendChart
+          title="ADS gap"
+          unit="%"
+          points={gap}
+          colorHex="#a78bfa"
+          yMin={0}
+          threshold={ADS_GAP_THRESHOLD_PCT}
+        />
+      </div>
+
+      <section>
+        <h2 className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-ink-muted">
+          Test log
+        </h2>
+        <table className="w-full border-collapse font-mono text-sm">
+          <tbody>
+            {log.map((r) => (
+              <tr key={r.id} className="border-b border-line/50">
+                <td className="py-2 pr-4 text-ink-muted">{formatDate(r.testDate)}</td>
+                <td className="py-2 pr-4 uppercase">{r.kind}</td>
+                <td className="py-2 pr-4 tabular-nums">{keyValue(r)}</td>
+                <td className="py-2 text-right">
+                  <ConfirmButton
+                    label="Delete"
+                    confirmLabel="Confirm"
+                    onConfirm={() => {
+                      void repo.deleteTestResult(r.id).then(refresh)
+                    }}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
     </div>
   )
 }

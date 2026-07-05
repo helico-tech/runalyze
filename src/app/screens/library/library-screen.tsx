@@ -59,7 +59,13 @@ export function LibraryScreen() {
         <h2 className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-ink-muted">
           Runs
         </h2>
-        <RunList activities={activities} badges={badges} />
+        <RunList
+          activities={activities}
+          badges={badges}
+          onDelete={(id) => {
+            void repo.deleteActivity(id).then(refresh)
+          }}
+        />
       </section>
     </div>
   )

@@ -2,14 +2,17 @@ import { Link, useNavigate } from 'react-router-dom'
 import { activitySummary } from '../../../domain/analysis/activity-summary'
 import type { Activity } from '../../../domain/model/types'
 import { Badge } from '@/components/ui/badge'
+import { ConfirmButton } from '../../components/confirm-button'
 import { formatBpm, formatDate, formatDistanceKm, formatDuration, formatPace } from '../../format'
 
 export function RunList({
   activities,
   badges,
+  onDelete,
 }: {
   activities: Activity[]
   badges: Map<string, string[]>
+  onDelete?: (id: string) => void
 }) {
   const navigate = useNavigate()
   if (activities.length === 0) {
@@ -25,7 +28,8 @@ export function RunList({
           <th className="py-2 pr-4 font-medium">distance</th>
           <th className="py-2 pr-4 font-medium">avg hr</th>
           <th className="py-2 pr-4 font-medium">pace</th>
-          <th className="py-2 font-medium">tests</th>
+          <th className="py-2 pr-4 font-medium">tests</th>
+          <th className="py-2 font-medium"></th>
         </tr>
       </thead>
       <tbody>
@@ -53,12 +57,21 @@ export function RunList({
               <td className="py-2 pr-4 text-ch-pace">
                 {s.avgSpeed === null ? '–' : formatPace(s.avgSpeed)}
               </td>
-              <td className="py-2">
+              <td className="py-2 pr-4">
                 {(badges.get(a.id) ?? []).map((b) => (
                   <Badge key={b} className="mr-1">
                     {b}
                   </Badge>
                 ))}
+              </td>
+              <td className="py-2">
+                {onDelete && (
+                  <ConfirmButton
+                    label="Delete run"
+                    confirmLabel="Confirm delete"
+                    onConfirm={() => onDelete(a.id)}
+                  />
+                )}
               </td>
             </tr>
           )

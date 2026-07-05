@@ -51,6 +51,24 @@ describe('LibraryScreen', () => {
     await waitFor(() => expect(screen.getByText('2021-07-20')).toBeInTheDocument())
     expect(screen.getByText('1:00:01')).toBeInTheDocument() // durationS 3601
   })
+
+  it('deletes a run after confirmation', async () => {
+    const container = makeContainer(true)
+    const [outcome] = await container.parser.parse(fixtureBytes('Activity.fit'), 'Activity.fit')
+    if (!outcome!.ok) throw new Error('parse failed')
+    await container.repo.saveActivity(outcome!.activity, outcome!.rawBytes)
+    render(
+      <MemoryRouter>
+        <ContainerProvider container={container}>
+          <LibraryScreen />
+        </ContainerProvider>
+      </MemoryRouter>,
+    )
+    await screen.findByText('2021-07-20')
+    await userEvent.click(screen.getByRole('button', { name: /delete run/i }))
+    await userEvent.click(screen.getByRole('button', { name: /confirm delete/i }))
+    await waitFor(async () => expect(await container.repo.listActivities()).toHaveLength(0))
+  })
 })
 
 describe('App session banner', () => {
