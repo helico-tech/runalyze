@@ -15,6 +15,11 @@
 - #5 full-screen → per-screen container widths (workspace wide, others unchanged).
 - (#3 single AeT region and #6 analysis-tool selector already shipped in milestone 5.)
 
+## Review amendments (apply during execution — supersede the task bodies below)
+
+1. **HoverReadout value element (Task 4, blocker):** render the value in its own inner element so `getByText('150')` resolves — `{v.label} <span className="text-ink">{v.text}</span>` inside the colored chip span.
+2. **Guard the chart-stack redraw subscription (Task 3, perf):** `store.subscribe(redrawAll)` currently fires on every `setHoverT`, redrawing all canvases per pixel of hover. Guard it like the persistence hook — track `sectors`/`exclusions`/`selectedSectorId` refs at effect scope and early-return in the subscriber when none changed, so hover-only updates skip the redraw.
+
 ## Global Constraints
 
 - All prior Global Constraints apply (strict TS, domain purity grep, TDD, commit style, `@/` alias, jsdom docblock, `TZ: 'UTC'`, no uPlot in vitest).
