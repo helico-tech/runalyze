@@ -19,6 +19,15 @@
 - "can't delete runs" → delete on library run rows (confirm).
 - "can't delete tests" → delete in a Trends test-log (confirm).
 
+## Review amendments (apply during execution — supersede the task bodies below)
+
+1. **Container.renderer ripple (Task 1, blocker):** `renderer` stays REQUIRED on `Container`. Update the three existing test container literals to include `renderer: new FakeImageRenderer()`: `library-screen.test.tsx` (`makeContainer`), `activity-screen.test.tsx` (`renderAt`'s spread + its param type), `trends-screen.test.tsx` (`renderTrends`). Import `FakeImageRenderer` per relative depth.
+2. **TestPanel/AdsCard renderer is OPTIONAL (Task 3):** declare `renderer?: ImageRenderer` on both. Gate the Export button on `renderer && evaluation` (TestPanel) / `status.state === 'assessed' && renderer` (AdsCard). This leaves their existing tests (which omit `renderer`) compiling untouched. `Workspace` passes `useContainer().renderer` to TestPanel; `LibraryScreen` passes it to AdsCard.
+3. **Export size 1200×630 (Task 2, spec §4.5):** `EXPORT_W = 1200`, `EXPORT_H = 630` (OG ratio), not 1080².
+4. **ExportPreview full-size capture (Task 3):** render the card ONCE at intrinsic 1200×630 inside a `transform: scale(0.45); transform-origin: top left` wrapper within a `width:540 height:284 overflow:hidden` box. html-to-image captures the card node's own layout size (unaffected by the ancestor transform), so the PNG is full-size while the preview is visually scaled — no width override on the card.
+5. **downloadBlob robustness (Task 3):** `document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 0)`.
+6. **E2E DB-clear race (Task 5):** clear IndexedDB before the app opens it — `await page.addInitScript(() => indexedDB.deleteDatabase('runalyze'))` then `page.goto('/')`, instead of delete-then-reload.
+
 ## Global Constraints
 
 - All prior Global Constraints apply (strict TS, domain purity grep incl. `from 'uplot'`/`from 'zustand'`/`from 'html-to-image'`, TDD, commit style, `@/` alias, jsdom docblock, `TZ: 'UTC'`).
