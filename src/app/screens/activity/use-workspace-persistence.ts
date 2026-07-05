@@ -44,7 +44,14 @@ export function useWorkspacePersistence(
       prevExclusions.current = exclusions
     }
 
+    let lastSectors = store.getState().sectors
+    let lastExclusions = store.getState().exclusions
     const unsub = store.subscribe(() => {
+      const cur = store.getState()
+      // Ignore transient changes (e.g. hoverT) that touch neither sectors nor exclusions.
+      if (cur.sectors === lastSectors && cur.exclusions === lastExclusions) return
+      lastSectors = cur.sectors
+      lastExclusions = cur.exclusions
       if (timer.current) clearTimeout(timer.current)
       timer.current = setTimeout(flush, 500)
     })

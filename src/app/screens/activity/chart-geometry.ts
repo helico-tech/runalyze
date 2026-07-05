@@ -113,3 +113,14 @@ export function createSector(
   if (endS - startS < minWidthS) return null
   return { id, activityId: '', range: { startS, endS }, label: '', kind: 'sector' }
 }
+
+export function cursorForTarget(target: DragTarget, dragging: boolean): string {
+  switch (target.kind) {
+    case 'move-sector':
+      return dragging ? 'grabbing' : 'grab'
+    case 'create':
+      return 'crosshair'
+    default:
+      return 'ew-resize'
+  }
+}

@@ -8,6 +8,7 @@ import { channelsPresent, driftChannelLabel } from '../../channels'
 import { useContainer } from '../../container-context'
 import { formatDuration } from '../../format'
 import { ChartStack } from './chart-stack'
+import { HoverReadout } from './hover-readout'
 import { NotesPanel } from './notes-panel'
 import { StatsPanel } from './stats-panel'
 import { TestPanel } from './test-panel'
@@ -48,10 +49,10 @@ export function ActivityScreen() {
 
   useWorkspacePersistence(store, repo, id ?? '', ready)
 
-  if (loading) return <p className="text-ink-muted">Loading…</p>
+  if (loading) return <p className="mx-auto max-w-5xl text-ink-muted">Loading…</p>
   if (!activity)
     return (
-      <p className="text-ink-muted">
+      <p className="mx-auto max-w-5xl text-ink-muted">
         Run not found.{' '}
         <Link to="/" className="text-ink underline">
           Back to library
@@ -107,7 +108,7 @@ function Workspace({
   )
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto max-w-[1600px] space-y-4">
       <Link to="/" className="font-mono text-xs uppercase tracking-widest text-ink-muted">
         ← library
       </Link>
@@ -197,7 +198,9 @@ function Workspace({
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <HoverReadout activity={activity} store={store} />
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <ChartStack activity={activity} store={store} />
         <div className="space-y-6">
           {activeTest && testWindow ? (
