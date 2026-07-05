@@ -1,5 +1,5 @@
 import { defaultExclusions, makeSeries } from '../model/series'
-import type { Activity, ChannelKind, Exclusions, Series } from '../model/types'
+import type { Activity, ChannelKind, Exclusions, Lap, Series } from '../model/types'
 
 export interface SyntheticSeriesOpts {
   durationS: number
@@ -26,6 +26,7 @@ export interface SyntheticActivityOpts {
   durationS: number
   channels?: Partial<Record<ChannelKind, Series>>
   exclusions?: Exclusions
+  laps?: Lap[]
   id?: string
   startTime?: Date
 }
@@ -39,5 +40,6 @@ export function syntheticActivity(opts: SyntheticActivityOpts): Activity {
     device: null,
     channels: opts.channels ?? {},
     exclusions: opts.exclusions ?? defaultExclusions(opts.durationS),
+    laps: opts.laps ?? [],
   }
 }

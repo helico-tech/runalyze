@@ -24,6 +24,14 @@ export interface Exclusions {
   cooldownStartS: number
 }
 
+export type LapTrigger = 'manual' | 'auto' | 'session-end'
+
+export interface Lap {
+  index: number
+  range: TimeRange
+  trigger: LapTrigger
+}
+
 export interface Activity {
   /** content hash of the source file */
   id: string
@@ -33,6 +41,7 @@ export interface Activity {
   device: string | null
   channels: Partial<Record<ChannelKind, Series>>
   exclusions: Exclusions
+  laps: Lap[]
 }
 
 export interface Sector {

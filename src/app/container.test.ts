@@ -18,6 +18,7 @@ describe('createContainer', () => {
         device: null,
         channels: {},
         exclusions: { warmupEndS: 0, cooldownStartS: 1 },
+        laps: [],
       },
       new Uint8Array(),
     )

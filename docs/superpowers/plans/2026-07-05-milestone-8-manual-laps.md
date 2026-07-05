@@ -51,9 +51,9 @@
 - `decode-fit.ts`: parse `messages.lapMesgs` → `Lap[]` (normalize `lapTrigger`: `'manual'`→`manual`, `'sessionEnd'`→`session-end`, else `auto`; index by array position; range clamped to `[0, durationS]`).
 - `synthetic.ts`: `SyntheticActivityOpts` gains optional `laps`; `syntheticActivity` sets `laps: opts.laps ?? []`.
 
-- [ ] **Step 1: Add the manifest facts** — append a "Laps" line to each user-run section in `fixtures-manifest.md`: long-run 3 manual laps [0,7511.275],[7511,9911],[9911,10511.002]; user-run & gap-run 0 manual laps.
+- [x] **Step 1: Add the manifest facts** — append a "Laps" line to each user-run section in `fixtures-manifest.md`: long-run 3 manual laps [0,7511.275],[7511,9911],[9911,10511.002]; user-run & gap-run 0 manual laps.
 
-- [ ] **Step 2: Write the failing tests.**
+- [x] **Step 2: Write the failing tests.**
 
 `src/domain/model/laps.test.ts`:
 
@@ -115,9 +115,9 @@ it('summarizes an arbitrary range via rangeSummary', () => {
 
 (Import `rangeSummary` in that test.)
 
-- [ ] **Step 3: Run to verify fail.**
+- [x] **Step 3: Run to verify fail.**
 
-- [ ] **Step 4: Implement.**
+- [x] **Step 4: Implement.**
 
 `types.ts` additions:
 
@@ -173,7 +173,7 @@ const laps: Lap[] = (messages.lapMesgs ?? [])
 
 `container.test.ts`: add `laps: []` to the inline activity literal.
 
-- [ ] **Step 5: Verify pass; commit.**
+- [x] **Step 5: Verify pass; commit.**
 
 ```bash
 git add -A && git commit -m "feat(domain): parse FIT laps; manualLaps helper; rangeSummary; Activity.laps"
@@ -191,7 +191,7 @@ git add -A && git commit -m "feat(domain): parse FIT laps; manualLaps helper; ra
 - `LapTable({ activity })` — presentational; renders one row per `manualLaps(activity)`: `L{n}`, `start–end` (via `formatDuration`), duration, distance (`formatDistanceKm`), avg HR (`formatBpm`), avg pace (`formatPace`), avg power — each computed with `rangeSummary(activity, lap.range)`. Renders nothing when there are no manual laps.
 - chart-stack overlay: after sector bands, for each `manualLaps(activity)` draw a dashed vertical line at `lap.range.startS` (and the final lap's `endS`) across the pane in amber `rgba(245,165,36,0.55)`; dedupe boundaries. Laps are display-only (not in `hitTest`).
 
-- [ ] **Step 1: Write the failing test.**
+- [x] **Step 1: Write the failing test.**
 
 `src/app/screens/activity/lap-table.test.tsx`:
 
@@ -233,11 +233,11 @@ describe('LapTable', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail.**
+- [x] **Step 2: Run to verify fail.**
 
-- [ ] **Step 3: Implement** `lap-table.tsx` (using `manualLaps` + `rangeSummary` + format utils), then wire it into the workspace details column (below the stats/notes, or in a "Laps" section under the analysis row), and add the lap-divider drawing to the chart-stack overlay (`import { manualLaps }`).
+- [x] **Step 3: Implement** `lap-table.tsx` (using `manualLaps` + `rangeSummary` + format utils), then wire it into the workspace details column (below the stats/notes, or in a "Laps" section under the analysis row), and add the lap-divider drawing to the chart-stack overlay (`import { manualLaps }`).
 
-- [ ] **Step 4: Full gate; commit.**
+- [x] **Step 4: Full gate; commit.**
 
 Run: `npm test && npm run lint && npm run build`. Purity grep clean.
 
@@ -249,8 +249,8 @@ git add -A && git commit -m "feat(workspace): manual-lap breakdown table and cha
 
 ### Task 3: Visual verification
 
-- [ ] **Step 1:** `npm run dev`; playwright-cli: import `user-long-run-2025-04-26.fit`, open its workspace. Confirm: dashed amber lap dividers at ~7511 s and ~9911 s across the charts; a Laps table listing L1/L2/L3 with durations (2:05:11 / 40:00 / 10:00), distances, and avg HR/pace/power. Import `user-run-2026-07-05.fit` and confirm no lap markers/table (auto-laps only). Screenshot.
-- [ ] **Step 2:** Fix defects; re-verify; commit.
+- [x] **Step 1:** `npm run dev`; playwright-cli: import `user-long-run-2025-04-26.fit`, open its workspace. Confirm: dashed amber lap dividers at ~7511 s and ~9911 s across the charts; a Laps table listing L1/L2/L3 with durations (2:05:11 / 40:00 / 10:00), distances, and avg HR/pace/power. Import `user-run-2026-07-05.fit` and confirm no lap markers/table (auto-laps only). Screenshot.
+- [x] **Step 2:** Fix defects; re-verify; commit.
 
 ## Definition of done (milestone 8)
 

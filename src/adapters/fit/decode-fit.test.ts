@@ -86,6 +86,22 @@ describe('decodeFitActivity', () => {
     expect(uncoveredS(a.channels.speed!, { startS: 0, endS: a.durationS })).toBeCloseTo(133, 3)
   })
 
+  it('parses manual laps from the long run (manifest values)', () => {
+    const a = decodeFitActivity(fixtureBytes('user-long-run-2025-04-26.fit'), 'id-laps')
+    const manual = a.laps.filter((l) => l.trigger === 'manual')
+    expect(manual).toHaveLength(3)
+    expect(manual[0]!.range.startS).toBe(0)
+    expect(manual[0]!.range.endS).toBeCloseTo(7511.275, 2)
+    expect(manual[1]!.range).toEqual({ startS: 7511, endS: 9911 })
+    expect(manual[2]!.range.startS).toBe(9911)
+  })
+
+  it('marks auto-lap runs as having no manual laps', () => {
+    const a = decodeFitActivity(fixtureBytes('user-run-2026-07-05.fit'), 'id-auto')
+    expect(a.laps.some((l) => l.trigger === 'manual')).toBe(false)
+    expect(a.laps.length).toBeGreaterThan(0) // auto + sessionEnd still parsed
+  })
+
   it('rejects a truncated FIT file', () => {
     expect(() => decodeFitActivity(fixtureBytes('corrupt.fit'), 'id-5')).toThrow(FitDecodeError)
   })
