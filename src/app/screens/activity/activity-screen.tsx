@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useStore as useZustand } from 'zustand'
-import type { Activity } from '../../../domain/model/types'
+import type { Activity, TestResult } from '../../../domain/model/types'
 import type { LibraryRepository } from '../../../domain/ports/library-repository'
 import { channelsPresent, driftChannelLabel } from '../../channels'
 import { useContainer } from '../../container-context'
@@ -9,6 +10,8 @@ import { formatDuration } from '../../format'
 import { ChartStack } from './chart-stack'
 import { NotesPanel } from './notes-panel'
 import { StatsPanel } from './stats-panel'
+import { TestPanel } from './test-panel'
+import { suggestTestWindow, TEST_WINDOW_ID, type TestKind } from './test-window'
 import { createWorkspaceStore, type WorkspaceStore } from './workspace-store'
 import { useWorkspacePersistence } from './use-workspace-persistence'
 import { cn } from '@/lib/utils'
@@ -75,7 +78,28 @@ function Workspace({
   const sectors = useZustand(store, (s) => s.sectors)
   const exclusions = useZustand(store, (s) => s.exclusions)
   const selectedSectorId = useZustand(store, (s) => s.selectedSectorId)
+  const activeTest = useZustand(store, (s) => s.activeTest)
   const present = useMemo(() => channelsPresent(activity), [activity])
+  const testWindow = sectors.find((s) => s.id === TEST_WINDOW_ID)?.range ?? null
+  const userSectors = sectors.filter((s) => s.id !== TEST_WINDOW_ID)
+  const suggestions = useMemo(
+    () => ({
+      aet: suggestTestWindow(activity, 'aet'),
+      ant: suggestTestWindow(activity, 'ant'),
+    }),
+    [activity],
+  )
+
+  const beginTest = (kind: TestKind) => {
+    const w = suggestions[kind]
+    if (w) store.getState().startTest(kind, w, activity.id)
+  }
+
+  const handleSaveResult = (result: TestResult) => {
+    void repo.saveTestResult(result)
+    toast.success(`Saved ${result.kind.toUpperCase()} test`)
+    store.getState().cancelTest()
+  }
 
   const saveNote = useCallback(
     (text: string) => void repo.saveNote({ activityId: activity.id, text, updatedAt: new Date() }),
@@ -123,9 +147,33 @@ function Workspace({
         </span>
       </div>
 
-      {sectors.length > 0 && (
+      <div className="flex items-center gap-2 font-mono text-xs text-ink-muted">
+        analysis
+        {(['aet', 'ant'] as const).map((kind) => (
+          <button
+            key={kind}
+            type="button"
+            disabled={suggestions[kind] === null}
+            title={
+              suggestions[kind] === null
+                ? 'This run is too short or has no heart rate for this test'
+                : undefined
+            }
+            onClick={() => beginTest(kind)}
+            className={cn(
+              'rounded border border-line px-2 py-1',
+              activeTest === kind ? 'bg-surface-2 text-ink' : 'text-ink-muted',
+              suggestions[kind] === null && 'opacity-40',
+            )}
+          >
+            {kind === 'aet' ? 'AeT test' : 'AnT test'}
+          </button>
+        ))}
+      </div>
+
+      {userSectors.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {sectors.map((s) => (
+          {userSectors.map((s) => (
             <span
               key={s.id}
               className={cn(
@@ -152,13 +200,24 @@ function Workspace({
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <ChartStack activity={activity} store={store} />
         <div className="space-y-6">
-          <StatsPanel
-            activity={activity}
-            sectors={sectors}
-            exclusions={exclusions}
-            driftChannel={driftChannel}
-            selectedSectorId={selectedSectorId}
-          />
+          {activeTest && testWindow ? (
+            <TestPanel
+              activity={activity}
+              kind={activeTest}
+              window={testWindow}
+              driftChannel={driftChannel}
+              onSave={handleSaveResult}
+              onCancel={() => store.getState().cancelTest()}
+            />
+          ) : (
+            <StatsPanel
+              activity={activity}
+              sectors={userSectors}
+              exclusions={exclusions}
+              driftChannel={driftChannel}
+              selectedSectorId={selectedSectorId}
+            />
+          )}
           <NotesPanel initialText={initialNote} onSave={saveNote} />
         </div>
       </div>

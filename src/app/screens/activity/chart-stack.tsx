@@ -58,15 +58,29 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
         xpos(domainMax) - xpos(exclusions.cooldownStartS),
         h,
       )
-      // sector bands
+      // sector bands (test window gets a distinct green treatment + a midpoint split line)
       for (const s of sectors) {
         const x0 = xpos(s.range.startS)
         const x1 = xpos(s.range.endS)
-        ctx.fillStyle =
-          s.id === selectedSectorId ? 'rgba(91,157,255,0.18)' : 'rgba(91,157,255,0.09)'
-        ctx.fillRect(x0, top, x1 - x0, h)
-        ctx.strokeStyle = 'rgba(91,157,255,0.5)'
-        ctx.strokeRect(x0, top, x1 - x0, h)
+        const isTest = s.kind === 'test-window'
+        if (isTest) {
+          ctx.fillStyle = 'rgba(61,214,140,0.14)'
+          ctx.fillRect(x0, top, x1 - x0, h)
+          ctx.strokeStyle = 'rgba(61,214,140,0.6)'
+          ctx.strokeRect(x0, top, x1 - x0, h)
+          const mid = xpos((s.range.startS + s.range.endS) / 2)
+          ctx.strokeStyle = 'rgba(230,235,240,0.35)'
+          ctx.beginPath()
+          ctx.moveTo(mid, top)
+          ctx.lineTo(mid, top + h)
+          ctx.stroke()
+        } else {
+          ctx.fillStyle =
+            s.id === selectedSectorId ? 'rgba(91,157,255,0.18)' : 'rgba(91,157,255,0.09)'
+          ctx.fillRect(x0, top, x1 - x0, h)
+          ctx.strokeStyle = 'rgba(91,157,255,0.5)'
+          ctx.strokeRect(x0, top, x1 - x0, h)
+        }
       }
       ctx.restore()
     }
