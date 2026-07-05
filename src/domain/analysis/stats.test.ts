@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { makeSeries } from '../model/series'
 import { syntheticSeries } from '../testing/synthetic'
-import { uncoveredS, windowStats, windowStdDev } from './stats'
+import { splitHalves, uncoveredS, windowStats, windowStdDev } from './stats'
+
+describe('splitHalves', () => {
+  it('splits at the temporal midpoint', () => {
+    expect(splitHalves({ startS: 100, endS: 700 })).toEqual({
+      first: { startS: 100, endS: 400 },
+      second: { startS: 400, endS: 700 },
+    })
+  })
+})
 
 describe('windowStats', () => {
   it('computes exact stats over a uniform 1Hz constant series', () => {

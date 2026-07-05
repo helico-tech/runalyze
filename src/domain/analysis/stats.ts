@@ -79,3 +79,11 @@ export function windowStdDev(series: Series, range: TimeRange): number {
 export function uncoveredS(series: Series, range: TimeRange): number {
   return Math.max(0, rangeLengthS(range) - windowStats(series, range).weightS)
 }
+
+export function splitHalves(range: TimeRange): { first: TimeRange; second: TimeRange } {
+  const mid = (range.startS + range.endS) / 2
+  return {
+    first: { startS: range.startS, endS: mid },
+    second: { startS: mid, endS: range.endS },
+  }
+}
