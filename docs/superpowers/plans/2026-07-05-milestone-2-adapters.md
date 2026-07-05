@@ -34,7 +34,7 @@ These are observations, not assumptions — the plan's code relies on them:
 **Files:**
 - Create: `tests/fixtures/Activity.fit`, `tests/fixtures/HrmPluginTestActivity.fit`, `tests/fixtures/WithGearChangeData.fit`, `tests/fixtures/user-run-2026-07-05.fit`, `tests/fixtures/activities.zip`, `tests/fixtures/corrupt.fit`, `tests/fixtures/not-a-fit.txt`, `tests/fixtures/fixtures-manifest.md`
 - Delete: `fit-files/` (user's drop folder, file moves into fixtures)
-- Modify: `package.json` (deps via npm install)
+- Modify: `package.json` (deps via npm install), `tsconfig.json` (add node types)
 
 **Interfaces:**
 - Consumes: nothing.
@@ -84,13 +84,15 @@ noted.
 - session: sport walking, totalElapsedTime 309 · device fr955
 - channels: heartRate 310 / 72.8613 / 93 · temperature 310 / 26.3065 / 28
   · speed 310 / 0.0687 · altitude 310 / 1585.2877 · power absent
+  · cadence (spm, walking ⇒ 2×(cadence+fractionalCadence)) 310 / 25.4452
 
 ## WithGearChangeData.fit (Garmin fit-javascript-sdk test data)
 
 - records: 1979, startTime 2022-06-22T23:08:37.000Z, lastRelT 1978 s, monotonic
 - **no sessionMesgs, no sportMesgs** → sport falls back to "unknown", durationS to 1978
 - device edge1040 · native power present: 1979 / 120.4987 / 534
-- channels: heartRate 1979 / 105.186 / 136 · cadence 1954 samples (sparser than records)
+- channels: heartRate 1979 / 105.186 / 136 · cadence 1954 samples (sparser than records),
+  avg 82.7682 — native rpm kept: no session ⇒ sport "unknown" ⇒ no stride doubling
 
 ## user-run-2026-07-05.fit (user's Garmin FR255 + Stryd; PERSONAL DATA — private repo only)
 
@@ -98,7 +100,8 @@ noted.
 - session: sport running, totalElapsedTime 3600.873, avgHeartRate 159 · device fr255
 - **no native power** — power is developer field {fieldName "Power", units "Watts", key 7}
 - channels: heartRate 3602 (avg 159.0147) · speed (enhancedSpeed) 3602 / 2.5059
-  · power (developer) 3602 / 213.5053, first value 221 · cadence 3602 · altitude 3602
+  · power (developer) 3602 / 213.5053, first value 221 · altitude 3602
+  · cadence (spm, running ⇒ 2×(cadence+fractionalCadence)) 3602 / 173.2274 / max 179
   · distance 3602 · temperature absent
 - hand-computed decoupling over window [0, 3600), halves at 1800 (plain per-half means):
   - Pa:HR — halves 2.4829/154.6639 and 2.5291/163.3567 → **decoupling 3.5606 %**
@@ -120,7 +123,7 @@ Drop additional real runs here, extend this manifest with independently computed
 BEFORE writing tests that use them (decode with a standalone script, record the numbers).
 ```
 
-- [ ] **Step 3: Install dependencies**
+- [ ] **Step 3: Install dependencies and admit node types into the tsc program**
 
 ```bash
 npm install @garmin/fitsdk fflate dexie
@@ -128,6 +131,11 @@ npm install -D fake-indexeddb @types/node
 ```
 
 Expected: exit 0.
+
+Then edit `tsconfig.json`: change `"types": ["vite/client"]` to `"types": ["vite/client", "node"]`.
+Without this, `@types/node`'s ambient `node:fs`/`node:url` declarations never enter the
+program and `npm run build` (tsc --noEmit) fails on the Task 2 fixtures helper — vitest
+transpiles without typechecking, so the break would surface only at the final gate.
 
 - [ ] **Step 4: Verify existing gates still pass**
 
@@ -159,7 +167,7 @@ git commit -m "chore: FIT fixtures with independently computed manifest, adapter
   - `decodeFitActivity(bytes: Uint8Array, id: string): Activity` — throws `FitDecodeError` on invalid input
   - `fixtureBytes(name: string): Uint8Array` (test helper reading `tests/fixtures/`)
 
-Normalization rules (spec §2.4/§5, spike facts): startTime = session start else first record timestamp; per-record relative `t = (ts − startTime)/1000`, records with missing timestamps, `t < 0`, or non-increasing `t` are dropped; channel values must be finite numbers; `speed = enhancedSpeed ?? speed`; `altitude = enhancedAltitude ?? altitude`; `power = native ?? developer-field power` (description with `fieldName === 'Power'` and Watts units, looked up by its `key`); `durationS = session.totalElapsedTime ?? lastRelT`; `sport = session ?? sportMesgs ?? 'unknown'`; `device = String(garminProduct ?? manufacturer) ?? null`; channels with zero samples are omitted; an activity with zero channels is an error.
+Normalization rules (spec §2.4/§5, spike facts): startTime = session start else first record timestamp; per-record relative `t = (ts − startTime)/1000`, records with missing timestamps, `t < 0`, or non-increasing `t` are dropped; channel values must be finite numbers; `speed = enhancedSpeed ?? speed`; `altitude = enhancedAltitude ?? altitude`; `power = native ?? developer-field power` (description with `fieldName === 'Power'` and Watts units, looked up by its `key`); cadence: stride sports (running/walking/hiking) record strides/min in FIT — normalize to spm as `2 × (cadence + (fractionalCadence ?? 0))`; other sports keep native units (cycling rpm, etc.), and session-less files (sport `'unknown'`) are not doubled; `durationS = session.totalElapsedTime ?? lastRelT`; `sport = session ?? sportMesgs ?? 'unknown'`; `device = String(garminProduct ?? manufacturer) ?? null`; channels with zero samples are omitted; an activity with zero channels is an error.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -240,6 +248,9 @@ describe('decodeFitActivity', () => {
     expect(plainMean(power)).toBeCloseTo(213.5053, 3)
     expect(plainMean(a.channels.heartRate!)).toBeCloseTo(159.0147, 3)
     expect(plainMean(a.channels.speed!)).toBeCloseTo(2.5059, 3)
+    // stride-sport cadence normalized to spm (manifest: 173.2274)
+    expect(a.channels.cadence!.t.length).toBe(3602)
+    expect(plainMean(a.channels.cadence!)).toBeCloseTo(173.2274, 3)
   })
 
   it('falls back gracefully when session messages are absent', () => {
@@ -250,6 +261,8 @@ describe('decodeFitActivity', () => {
     expect(plainMean(a.channels.power!)).toBeCloseTo(120.4987, 3)
     // cadence is sparser than records — channels are independent
     expect(a.channels.cadence!.t.length).toBe(1954)
+    // native rpm kept: sport is 'unknown' here, so no stride doubling
+    expect(plainMean(a.channels.cadence!)).toBeCloseTo(82.7682, 3)
     expect(a.channels.heartRate!.t.length).toBe(1979)
   })
 
@@ -337,6 +350,9 @@ import type { Activity, ChannelKind, Series } from '../../domain/model/types'
 
 export class FitDecodeError extends Error {}
 
+/** FIT stride sports record cadence in strides/min; spec §2.4 wants steps/min. */
+const STRIDE_SPORTS = new Set(['running', 'walking', 'hiking'])
+
 interface FitRecord {
   timestamp?: Date
   heartRate?: number
@@ -344,6 +360,7 @@ interface FitRecord {
   enhancedSpeed?: number
   power?: number
   cadence?: number
+  fractionalCadence?: number
   altitude?: number
   enhancedAltitude?: number
   distance?: number
@@ -378,11 +395,20 @@ export function decodeFitActivity(bytes: Uint8Array, id: string): Activity {
   const devPower = (r: FitRecord): unknown =>
     powerKey === undefined ? undefined : r.developerFields?.[powerKey]
 
+  const sport = session?.sport ?? messages.sportMesgs?.[0]?.sport ?? 'unknown'
+  const strideSport = STRIDE_SPORTS.has(sport)
+
   const extractors: Array<[ChannelKind, (r: FitRecord) => unknown]> = [
     ['heartRate', (r) => r.heartRate],
     ['speed', (r) => r.enhancedSpeed ?? r.speed],
     ['power', (r) => r.power ?? devPower(r)],
-    ['cadence', (r) => r.cadence],
+    [
+      'cadence',
+      (r) =>
+        strideSport && r.cadence !== undefined
+          ? 2 * (r.cadence + (r.fractionalCadence ?? 0))
+          : r.cadence,
+    ],
     ['altitude', (r) => r.enhancedAltitude ?? r.altitude],
     ['distance', (r) => r.distance],
     ['temperature', (r) => r.temperature],
@@ -423,7 +449,7 @@ export function decodeFitActivity(bytes: Uint8Array, id: string): Activity {
     id,
     startTime,
     durationS,
-    sport: session?.sport ?? messages.sportMesgs?.[0]?.sport ?? 'unknown',
+    sport,
     device:
       fileId?.garminProduct != null
         ? String(fileId.garminProduct)
