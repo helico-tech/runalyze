@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router-dom'
 import type { AetTestResult } from '../../../domain/model/types'
 import { InMemoryLibraryRepository } from '../../../adapters/storage/in-memory-library-repository'
 import { GarminFitFileParser } from '../../../adapters/fit/fit-file-parser'
+import { FakeImageRenderer } from '../../../adapters/export/fake-image-renderer'
 import { ContainerProvider } from '../../container-context'
 import { TrendsScreen } from './trends-screen'
 
@@ -14,7 +15,14 @@ afterEach(cleanup)
 function renderTrends(repo: InMemoryLibraryRepository) {
   render(
     <MemoryRouter>
-      <ContainerProvider container={{ repo, parser: new GarminFitFileParser(), persistent: true }}>
+      <ContainerProvider
+        container={{
+          repo,
+          parser: new GarminFitFileParser(),
+          renderer: new FakeImageRenderer(),
+          persistent: true,
+        }}
+      >
         <TrendsScreen />
       </ContainerProvider>
     </MemoryRouter>,

@@ -7,6 +7,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { GarminFitFileParser } from '../../../adapters/fit/fit-file-parser'
 import { InMemoryLibraryRepository } from '../../../adapters/storage/in-memory-library-repository'
 import { fixtureBytes } from '../../../adapters/testing/fixtures'
+import { FakeImageRenderer } from '../../../adapters/export/fake-image-renderer'
 import { ContainerProvider } from '../../container-context'
 import { ActivityScreen } from './activity-screen'
 
@@ -27,7 +28,9 @@ function renderAt(
 ) {
   render(
     <MemoryRouter initialEntries={[`/activity/${id}`]}>
-      <ContainerProvider container={{ ...container, persistent: true }}>
+      <ContainerProvider
+        container={{ ...container, renderer: new FakeImageRenderer(), persistent: true }}
+      >
         <Routes>
           <Route path="/activity/:id" element={<ActivityScreen />} />
         </Routes>

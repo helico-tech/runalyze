@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { InMemoryLibraryRepository } from '../adapters/storage/in-memory-library-repository'
+import { FakeImageRenderer } from '../adapters/export/fake-image-renderer'
 import { createContainer } from './container'
 
 describe('createContainer', () => {
@@ -21,5 +22,12 @@ describe('createContainer', () => {
       new Uint8Array(),
     )
     expect(await c.repo.hasActivity('x')).toBe(true)
+  })
+
+  it('provides a renderer', async () => {
+    const c = await createContainer()
+    expect(c.renderer).toBeInstanceOf(FakeImageRenderer) // node env has no document
+    const blob = await c.renderer.toPngBlob(undefined as unknown as HTMLElement)
+    expect(blob.type).toBe('image/png')
   })
 })

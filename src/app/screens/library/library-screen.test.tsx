@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { GarminFitFileParser } from '../../../adapters/fit/fit-file-parser'
 import { InMemoryLibraryRepository } from '../../../adapters/storage/in-memory-library-repository'
 import { fixtureBytes } from '../../../adapters/testing/fixtures'
+import { FakeImageRenderer } from '../../../adapters/export/fake-image-renderer'
 import { App } from '../../../App'
 import { ContainerProvider } from '../../container-context'
 import { LibraryScreen } from './library-screen'
@@ -17,6 +18,7 @@ function makeContainer(persistent = true) {
   return {
     parser: new GarminFitFileParser(),
     repo: new InMemoryLibraryRepository(),
+    renderer: new FakeImageRenderer(),
     persistent,
   }
 }
