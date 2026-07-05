@@ -1,6 +1,13 @@
 import { createStore, useStore as useZustandStore } from 'zustand'
-import type { Activity, DriftChannel, Exclusions, Sector } from '../../../domain/model/types'
+import type {
+  Activity,
+  DriftChannel,
+  Exclusions,
+  Sector,
+  TimeRange,
+} from '../../../domain/model/types'
 import { channelsPresent, type DisplayChannel } from '../../channels'
+import { TEST_WINDOW_ID, testWindowSector, type TestKind } from './test-window'
 
 export interface WorkspaceState {
   visible: Set<DisplayChannel>
@@ -8,6 +15,7 @@ export interface WorkspaceState {
   sectors: Sector[]
   exclusions: Exclusions
   selectedSectorId: string | null
+  activeTest: TestKind | null
   init(activity: Activity, sectors: Sector[]): void
   toggleChannel(c: DisplayChannel): void
   setDriftChannel(c: DriftChannel): void
@@ -15,6 +23,8 @@ export interface WorkspaceState {
   setExclusions(ex: Exclusions): void
   select(id: string | null): void
   removeSector(id: string): void
+  startTest(kind: TestKind, range: TimeRange, activityId: string): void
+  cancelTest(): void
 }
 
 export type WorkspaceStore = ReturnType<typeof createWorkspaceStore>
@@ -26,6 +36,7 @@ export function createWorkspaceStore() {
     sectors: [],
     exclusions: { warmupEndS: 0, cooldownStartS: 0 },
     selectedSectorId: null,
+    activeTest: null,
     init: (activity, sectors) =>
       set({
         visible: new Set(channelsPresent(activity).map((c) => c.key)),
@@ -33,6 +44,7 @@ export function createWorkspaceStore() {
         sectors,
         exclusions: activity.exclusions,
         selectedSectorId: null,
+        activeTest: null,
       }),
     toggleChannel: (c) =>
       set((s) => {
@@ -49,6 +61,21 @@ export function createWorkspaceStore() {
       set((s) => ({
         sectors: s.sectors.filter((sec) => sec.id !== id),
         selectedSectorId: s.selectedSectorId === id ? null : s.selectedSectorId,
+      })),
+    startTest: (kind, range, activityId) =>
+      set((s) => ({
+        activeTest: kind,
+        sectors: [
+          ...s.sectors.filter((x) => x.id !== TEST_WINDOW_ID),
+          testWindowSector(activityId, range),
+        ],
+        selectedSectorId: TEST_WINDOW_ID,
+      })),
+    cancelTest: () =>
+      set((s) => ({
+        activeTest: null,
+        sectors: s.sectors.filter((x) => x.id !== TEST_WINDOW_ID),
+        selectedSectorId: s.selectedSectorId === TEST_WINDOW_ID ? null : s.selectedSectorId,
       })),
   }))
 }
