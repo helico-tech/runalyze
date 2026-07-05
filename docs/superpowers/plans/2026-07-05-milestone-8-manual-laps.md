@@ -14,6 +14,23 @@
 - Each lap has `startTime` (Date) and `totalElapsedTime` (s). Lap range: `startS = (startTime − activityStart)/1000`, `endS = startS + totalElapsedTime`.
 - Fixture truth: `user-long-run-2025-04-26.fit` has **3 manual laps** — [0, 7511.275], [7511.000, 9911.000], [9911.000, 10511.002] — plus a `sessionEnd` tail. `user-run-2026-07-05.fit` and `user-gap-run-2026-07-02.fit` have **0 manual laps** (auto `time` laps + a `sessionEnd`).
 
+## Review amendments (apply during execution — supersede the task bodies below)
+
+1. **activitySummary must keep whole-activity totals (Task 1, major):** the `rangeSummary` refactor is right for per-lap stats, but `activitySummary` must NOT change its `durationS`/`distanceM` semantics — those are whole-activity totals shown in the library run list, and switching them to non-excluded-range values silently regresses any trimmed run (a 60-min run trimmed 5 min would show 55:00). Compute averages via `rangeSummary(a, nonExcludedRange(a))` but override the totals back to whole-activity:
+   ```ts
+   export function activitySummary(a: Activity): ActivitySummary {
+     const s = rangeSummary(a, nonExcludedRange(a))
+     const distance = a.channels.distance
+     return {
+       ...s,
+       durationS: a.durationS,
+       distanceM: distance && distance.v.length > 0 ? distance.v[distance.v.length - 1]! : null,
+     }
+   }
+   ```
+   Add a regression test: an activity with `warmupEndS > 0` asserts `activitySummary(a).durationS === a.durationS` and the whole-activity `distanceM`.
+2. **No Activity-literal ripple beyond the three listed** (syntheticActivity / decode-fit / container.test) — the reviewers confirmed all other tests build activities via `syntheticActivity`. Still, after adding required `laps`, run `npm run build` and fix any literal tsc flags.
+
 ## Global Constraints
 
 - All prior Global Constraints apply (strict TS, domain purity grep, TDD, commit style, `@/` alias, jsdom docblock, `TZ: 'UTC'`, no uPlot in vitest, fixture-manifest-before-tests).
