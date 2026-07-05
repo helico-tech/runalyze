@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { syntheticActivity } from '../testing/synthetic'
-import { manualLaps } from './laps'
+import { displayLaps } from './laps'
 import type { Lap } from './types'
 
 const laps: Lap[] = [
@@ -9,13 +9,16 @@ const laps: Lap[] = [
   { index: 2, range: { startS: 1200, endS: 1300 }, trigger: 'session-end' },
 ]
 
-describe('manualLaps', () => {
-  it('keeps only button-press laps', () => {
+describe('displayLaps', () => {
+  it('keeps manual and auto laps but drops the session-end fragment', () => {
     const a = syntheticActivity({ durationS: 1300, laps })
-    expect(manualLaps(a).map((l) => l.index)).toEqual([0])
+    expect(displayLaps(a).map((l) => [l.index, l.trigger])).toEqual([
+      [0, 'manual'],
+      [1, 'auto'],
+    ])
   })
   it('tolerates an activity with no laps field', () => {
     const a = syntheticActivity({ durationS: 60 })
-    expect(manualLaps(a)).toEqual([])
+    expect(displayLaps(a)).toEqual([])
   })
 })
