@@ -38,7 +38,7 @@
 - Consumes: nothing (first task).
 - Produces: working `npm run dev|build|test|lint` scripts. `src/scaffold.test.ts` is temporary; Task 2 deletes it.
 
-- [ ] **Step 1: Write config and entry files**
+- [x] **Step 1: Write config and entry files**
 
 `.gitignore`:
 
@@ -182,7 +182,7 @@ describe('scaffold', () => {
 })
 ```
 
-- [ ] **Step 2: Install dependencies**
+- [x] **Step 2: Install dependencies**
 
 Run:
 
@@ -193,13 +193,13 @@ npm install -D typescript vite @vitejs/plugin-react vitest @types/react @types/r
 
 Expected: both commands exit 0, `package-lock.json` created.
 
-- [ ] **Step 3: Verify the toolchain**
+- [x] **Step 3: Verify the toolchain**
 
 Run: `npm test` → Expected: 1 passed test (`scaffold`).
 Run: `npm run lint` → Expected: exit 0, no errors.
 Run: `npm run build` → Expected: `dist/` produced, exit 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
@@ -225,7 +225,7 @@ git commit -m "chore: scaffold Vite + React + TS strict + Vitest + ESLint/Pretti
   - `overlapsExclusion(a: Activity, w: TimeRange): boolean`
   - Test helpers: `syntheticSeries(opts): Series`, `syntheticActivity(opts): Activity`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/domain/model/series.test.ts`:
 
@@ -294,12 +294,12 @@ describe('range helpers', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — cannot resolve `./series` / `../testing/synthetic`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/domain/model/types.ts`:
 
@@ -475,18 +475,18 @@ export function syntheticActivity(opts: SyntheticActivityOpts): Activity {
 }
 ```
 
-- [ ] **Step 4: Delete the scaffold smoke test**
+- [x] **Step 4: Delete the scaffold smoke test**
 
 ```bash
 rm src/scaffold.test.ts
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS — all series/range tests green, scaffold test gone.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add -A
@@ -511,7 +511,7 @@ git commit -m "feat(domain): model types, series validation, range helpers, synt
 
 Weighting rule (spec §2.5): sample *i* (finite `v`, `startS ≤ t[i] < endS`) covers `span = min(rawDelta, endS − t[i])` where `rawDelta = (t[i+1] ?? endS) − t[i]`. If `rawDelta > GAP_THRESHOLD_S` the span counts as gap (`gapS`), contributing no weight. Non-finite samples contribute nothing anywhere. `mean = Σ v·span / Σ span`; `min`/`max`/`sampleCount` over finite in-range samples regardless of weight.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/domain/analysis/stats.test.ts`:
 
@@ -612,12 +612,12 @@ describe('uncoveredS', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — cannot resolve `./stats`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/domain/analysis/protocol-constants.ts`:
 
@@ -722,12 +722,12 @@ export function uncoveredS(series: Series, range: TimeRange): number {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -751,7 +751,7 @@ git commit -m "feat(domain): protocol constants and gap-aware weighted window st
   - `type SectorStats = Partial<Record<ChannelKind, SectorChannelStats>>`
   - `sectorStats(activity: Activity, range: TimeRange): SectorStats`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `src/domain/analysis/stats.test.ts`:
 
@@ -796,12 +796,12 @@ describe('sectorStats', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — `splitHalves` not exported; cannot resolve `./sector-stats`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Append to `src/domain/analysis/stats.ts`:
 
@@ -844,12 +844,12 @@ export function sectorStats(activity: Activity, range: TimeRange): SectorStats {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -872,7 +872,7 @@ git commit -m "feat(domain): halves split and per-sector channel statistics"
 
 Math (spec §2.1): `ratio = mean(output)/mean(HR)` per half; `decouplingPct = (ratio₁ − ratio₂)/ratio₁ × 100`. `uncoveredS = max(uncovered(output), uncovered(hr))` over the whole window.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/domain/analysis/decoupling.test.ts`:
 
@@ -929,12 +929,12 @@ describe('computeDecoupling', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — cannot resolve `./decoupling`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/domain/analysis/decoupling.ts`:
 
@@ -982,12 +982,12 @@ export function computeDecoupling(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1013,7 +1013,7 @@ git commit -m "feat(domain): Pa:HR / Pw:HR decoupling with analytic-value tests"
 
 Rules (spec §2.1): verdict `above-aet` if `d > 5.0`, `at-aet` if `3.5 ≤ d ≤ 5.0`, `below-aet` if `d < 3.5`. `valid` = not too-short and not overlapping exclusions (gaps only warn). `suggestedAetHr = round(windowAvgHr)` when `at-aet`, else null. `buildAetResult` sets `aetHr = suggestedAetHr ?? (acceptAetHr ? round(windowAvgHr) : null)`; `testDate = activity.startTime`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/domain/analysis/aet-protocol.test.ts`:
 
@@ -1130,12 +1130,12 @@ describe('buildAetResult', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — cannot resolve `./aet-protocol`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/domain/analysis/aet-protocol.ts`:
 
@@ -1229,12 +1229,12 @@ export function buildAetResult(args: BuildAetArgs): AetTestResult {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1259,7 +1259,7 @@ git commit -m "feat(domain): AeT protocol - verdict bands, evaluation, result bu
 
 Rules (spec §2.2): `antHr = mean(HR)` over `[max(testWindow.startS, testWindow.endS − ANT_AVG_SPAN_S), testWindow.endS)` (clamped so a too-short window never reads before its own start). Validity mirrors AeT: too-short (`< ANT_MIN_WINDOW_S`) or exclusion overlap invalidates; gaps (`uncoveredS(hr, testWindow) > MAX_GAP_IN_WINDOW_S`) only warn. The saved result also carries informational sample-weighted `windowAvgSpeed`/`windowAvgPower` over the window (spec §2.2 "average pace/power over the window"), `null` when the channel is absent or has no weighted samples.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/domain/analysis/ant-protocol.test.ts`:
 
@@ -1326,12 +1326,12 @@ describe('buildAntResult', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — cannot resolve `./ant-protocol`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/domain/analysis/ant-protocol.ts`:
 
@@ -1415,12 +1415,12 @@ export function buildAntResult(args: BuildAntArgs): AntTestResult {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1442,7 +1442,7 @@ git commit -m "feat(domain): AnT protocol - 30-min TT with final-20-min HR avera
 
 Rules (spec §2.3): only AeT results with `aetHr !== null` count; most recent by `testDate` on each side; `gapPct = (antHr − aetHr)/antHr × 100`; `ads = gapPct > 10` (exactly 10 is not ADS); stale = `now − testDate > 90 days` strictly.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/domain/analysis/ads-assessment.test.ts`:
 
@@ -1549,12 +1549,12 @@ describe('assessAds', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — cannot resolve `./ads-assessment`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/domain/analysis/ads-assessment.ts`:
 
@@ -1610,12 +1610,12 @@ export function assessAds(results: TestResult[], now: Date): AdsStatus {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -1637,7 +1637,7 @@ git commit -m "feat(domain): ADS assessment derived from latest AeT/AnT results"
 
 Rules (spec §2.6): no HR channel → `null`. Non-excluded span shorter than `minLengthS` → `null`; shorter than `targetLengthS` → the whole span. Otherwise slide a `targetLengthS` window from the span start in `WINDOW_SUGGESTION_STEP_S` steps; skip candidates with `uncoveredS(hr) > MAX_GAP_IN_WINDOW_S`; pick minimum HR stddev, ties to earliest; if every candidate is skipped, fall back to minimum stddev over all candidates.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/domain/analysis/window-suggestion.test.ts`:
 
@@ -1704,12 +1704,12 @@ describe('suggestWindow', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — cannot resolve `./window-suggestion`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/domain/analysis/window-suggestion.ts`:
 
@@ -1757,12 +1757,12 @@ export function suggestWindow(activity: Activity, opts: SuggestOpts): TimeRange 
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Run the full gate and commit**
+- [x] **Step 5: Run the full gate and commit**
 
 Run: `npm test && npm run lint && npm run build`
 Expected: all green.
