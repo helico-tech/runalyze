@@ -42,7 +42,7 @@ Findings from the pre-execution review panel (executed the plan to 160 green wit
   - `testWindowSector(activityId: string, range: TimeRange): Sector` — a `kind: 'test-window'` sector with `TEST_WINDOW_ID`.
 - store additions: state `activeTest: TestKind | null`; actions `startTest(kind, range)` (adds/replaces the test-window sector, sets `activeTest`, selects it), `cancelTest()` (removes the test-window sector, clears `activeTest`, deselects), and `testWindowRange(): TimeRange | null` selector helper. `removeSector`/`setSectors` unaffected. Non-test sectors are untouched by start/cancel.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/app/screens/activity/test-window.test.ts`:
 
@@ -126,9 +126,9 @@ describe('workspace store test mode', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing module + new store actions.
+- [x] **Step 2: Run to verify fail** — missing module + new store actions.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/app/screens/activity/test-window.ts`:
 
@@ -191,7 +191,7 @@ Add to the `WorkspaceState` interface:
 
 (Adjust the two store-test `startTest` calls to pass `'test-activity'` as the third arg.)
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(tests): workspace store test-mode and test-window helpers"
@@ -210,7 +210,7 @@ git add -A && git commit -m "feat(tests): workspace store test-mode and test-win
   - AnT: AnT HR (final 20 min), window avg HR, window duration, warnings; Save enabled when valid.
   - `onSave(result)` is called with a fully-built `TestResult` (the panel builds it via `buildAetResult`/`buildAntResult` using `crypto.randomUUID()` + `new Date()`); `onCancel()` closes.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/app/screens/activity/test-panel.test.tsx`:
 
@@ -306,9 +306,9 @@ describe('TestPanel AnT', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing module.
+- [x] **Step 2: Run to verify fail** — missing module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/app/screens/activity/test-panel.tsx`:
 
@@ -483,7 +483,7 @@ function AntBody({ e }: { e: AntEvaluation }) {
 }
 ```
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(tests): AeT/AnT test panel with live verdict and result building"
@@ -502,7 +502,7 @@ git add -A && git commit -m "feat(tests): AeT/AnT test panel with live verdict a
 - Chart-stack overlay draws `kind === 'test-window'` sectors distinctly (stronger fill + a midpoint split line for the AeT half boundary). Non-test sectors keep their existing style. (No new tests — canvas; validated in Task 5.)
 - Sector-chip row filters out `TEST_WINDOW_ID`.
 
-- [ ] **Step 1: Extend the failing screen test**
+- [x] **Step 1: Extend the failing screen test**
 
 Append to `src/app/screens/activity/activity-screen.test.tsx`:
 
@@ -533,9 +533,9 @@ it('runs and saves an AeT test that then appears as a badge source', async () =>
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — no AeT test button yet.
+- [x] **Step 2: Run to verify fail** — no AeT test button yet.
 
-- [ ] **Step 3: Implement the wiring**
+- [x] **Step 3: Implement the wiring**
 
 In `use-workspace-persistence.ts`, filter test-window sectors: change the flush to operate on `sectors.filter((s) => s.kind !== 'test-window')` (both the upsert loop source and the `now` map), so the transient window is never saved or diffed.
 
@@ -569,7 +569,7 @@ const handleSaveResult = (result: TestResult) => {
 
 (Import `toast` from sonner and `TestResult` from domain types.)
 
-- [ ] **Step 4: Full gate; commit**
+- [x] **Step 4: Full gate; commit**
 
 Run: `npm test && npm run lint && npm run build`
 Expected: all green.
@@ -595,7 +595,7 @@ git add -A && git commit -m "feat(tests): wire AeT/AnT test flows into the works
 - `trend-chart.tsx`: `TrendChart({ title, unit, points, yMin, yMax, threshold })` — a small SVG with dots + connecting line, optional dashed threshold line (for the 10% ADS gap), empty state when `points.length === 0`.
 - `trends-screen.tsx`: `TrendsScreen()` — reads `useTestResults()`, derives four series (AeT HR, AnT HR, AeT decoupling %, ADS gap % via pairing latest-per-day is out of scope; just plot each AeT/AnT result by `testDate`, and ADS gap computed per AeT result against the most recent prior AnT — keep simple: plot AeT HR from aet results, AnT HR from ant results, decoupling from aet results, and ADS gap as a single derived series from `assessAds` over growing prefixes is overkill → instead show the ADS gap only when both exist, as the current `assessAds` value, rendered as a one-point marker). Renders a small-multiples grid.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/app/screens/trends/trends-geometry.test.ts`:
 
@@ -705,9 +705,9 @@ describe('TrendsScreen', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing modules.
+- [x] **Step 2: Run to verify fail** — missing modules.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/app/screens/trends/trends-geometry.ts`:
 
@@ -891,7 +891,7 @@ In `src/App.tsx`: add a header nav link to `/trends` and the route. The header c
 
 (Import `Link` from react-router-dom.) Add the route `<Route path="/trends" element={<TrendsScreen />} />` and import `TrendsScreen`. Note: `AppShell` currently takes only `children`; the nav lives in `AppShell`'s header, so add the nav markup there. Because `AppShell` is also rendered in `App.test.tsx` inside `MemoryRouter`, the `Link`s are fine there.
 
-- [ ] **Step 4: Full gate; commit**
+- [x] **Step 4: Full gate; commit**
 
 Run: `npm test && npm run lint && npm run build`
 Expected: all green. Purity grep clean.
@@ -904,8 +904,8 @@ git add -A && git commit -m "feat(trends): SVG trend charts for AeT/AnT HR, deco
 
 ### Task 5: Visual verification
 
-- [ ] **Step 1:** `npm run dev`; via playwright-cli: import `user-run-2026-07-05.fit`, open its workspace, click "AeT test" → confirm a green test-window band with a midpoint split line appears across panes and the panel shows a live decoupling % + verdict; drag the window and watch the % change; click "Save result" → toast; navigate to Trends and confirm the AeT HR / decoupling charts show a point; back on the Library, confirm the run row shows an "AeT" badge and the ADS readout advanced past "Run an AeT test to begin". Screenshot the test flow and Trends.
-- [ ] **Step 2:** Fix defects; re-verify; commit.
+- [x] **Step 1:** `npm run dev`; via playwright-cli: import `user-run-2026-07-05.fit`, open its workspace, click "AeT test" → confirm a green test-window band with a midpoint split line appears across panes and the panel shows a live decoupling % + verdict; drag the window and watch the % change; click "Save result" → toast; navigate to Trends and confirm the AeT HR / decoupling charts show a point; back on the Library, confirm the run row shows an "AeT" badge and the ADS readout advanced past "Run an AeT test to begin". Screenshot the test flow and Trends.
+- [x] **Step 2:** Fix defects; re-verify; commit.
 
 ## Definition of done (milestone 5)
 
