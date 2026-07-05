@@ -52,7 +52,7 @@ coverage
 
 ```json
 {
-  "name": "driftlab",
+  "name": "runalyze",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -139,7 +139,7 @@ export default tseslint.config(
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DriftLab</title>
+    <title>Runalyze</title>
   </head>
   <body>
     <div id="root"></div>
@@ -166,7 +166,7 @@ createRoot(document.getElementById('root')!).render(
 
 ```tsx
 export function App() {
-  return <h1>DriftLab</h1>
+  return <h1>Runalyze</h1>
 }
 ```
 

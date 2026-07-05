@@ -2,9 +2,8 @@
 
 **Date:** 2026-07-05
 **Status:** Approved design, pending implementation plan
-**Working wordmark:** "DriftLab" — a single brand constant (`src/app/brand.ts`); the repo
-directory name "runalyze" clashes with the existing runalyze.com product, so user-facing
-branding uses the wordmark, and renaming later is a one-constant change.
+**Wordmark:** "Runalyze" — a single brand constant (`src/app/brand.ts`). The user chose the
+name knowing runalyze.com exists; renaming later stays a one-constant change.
 
 ## 1. Product overview
 
@@ -325,4 +324,4 @@ Metric units only in v1 (SI internally, min/km pace display).
 
 Mobile/touch sector editing, GPX/TCX import, grade-adjusted pace (GAP) as a derived
 channel, imperial units, multi-sport (uphill hiking), zone derivation from AeT/AnT,
-PWA/offline install, optional cloud sync, product rename away from the working wordmark.
+PWA/offline install, optional cloud sync.
