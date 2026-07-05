@@ -4,7 +4,14 @@ import { useStore as useZustand } from 'zustand'
 import type { Activity, Exclusions, Sector } from '../../../domain/model/types'
 import { CHANNELS } from '../../channels'
 import type { WorkspaceStore } from './workspace-store'
-import { applyDrag, createSector, hitTest, pxToleranceS, type DragTarget } from './chart-geometry'
+import {
+  applyDrag,
+  createSector,
+  cursorForTarget,
+  hitTest,
+  pxToleranceS,
+  type DragTarget,
+} from './chart-geometry'
 
 const canvasAvailable = (() => {
   try {
@@ -48,8 +55,15 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
       const top = u.bbox.top
       const h = u.bbox.height
       const xpos = (t: number) => u.valToPos(t, 'x', true)
+      // A short centered vertical grip signalling a draggable edge.
+      const grip = (xEdge: number, color: string) => {
+        const gh = h * 0.4
+        const gy = top + (h - gh) / 2
+        ctx.fillStyle = color
+        ctx.fillRect(xEdge - 1.5, gy, 3, gh)
+      }
       ctx.save()
-      // excluded shading (warmup / cooldown)
+      // excluded shading (warmup / cooldown) + trim grips
       ctx.fillStyle = 'rgba(11,14,20,0.66)'
       ctx.fillRect(xpos(0), top, xpos(exclusions.warmupEndS) - xpos(0), h)
       ctx.fillRect(
@@ -58,6 +72,8 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
         xpos(domainMax) - xpos(exclusions.cooldownStartS),
         h,
       )
+      grip(xpos(exclusions.warmupEndS), 'rgba(240,82,95,0.85)')
+      grip(xpos(exclusions.cooldownStartS), 'rgba(240,82,95,0.85)')
       // sector bands (test window gets a distinct green treatment + a midpoint split line)
       for (const s of sectors) {
         const x0 = xpos(s.range.startS)
@@ -74,12 +90,16 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
           ctx.moveTo(mid, top)
           ctx.lineTo(mid, top + h)
           ctx.stroke()
+          grip(x0, 'rgba(61,214,140,0.9)')
+          grip(x1, 'rgba(61,214,140,0.9)')
         } else {
           ctx.fillStyle =
             s.id === selectedSectorId ? 'rgba(91,157,255,0.18)' : 'rgba(91,157,255,0.09)'
           ctx.fillRect(x0, top, x1 - x0, h)
           ctx.strokeStyle = 'rgba(91,157,255,0.5)'
           ctx.strokeRect(x0, top, x1 - x0, h)
+          grip(x0, 'rgba(91,157,255,0.9)')
+          grip(x1, 'rgba(91,157,255,0.9)')
         }
       }
       ctx.restore()
@@ -96,6 +116,7 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
         const { sectors, exclusions } = store.getState()
         const target = hitTest(t, sectors, exclusions, tolS)
         dragRef.current = { target, grabTimeS: t, sectors0: sectors, exclusions0: exclusions }
+        u.over.style.cursor = cursorForTarget(target, true)
         if (target.kind === 'move-sector' || target.kind.startsWith('resize')) {
           const id = 'id' in target ? target.id : null
           if (id) store.getState().select(id)
@@ -104,7 +125,16 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
       })
       u.over.addEventListener('pointermove', (e) => {
         const drag = dragRef.current
-        if (!drag || drag.target.kind === 'create') return
+        if (!drag) {
+          // hover: cursor cue + track the hovered time for the readout
+          const t = timeAt(e)
+          const { sectors, exclusions } = store.getState()
+          const tolS = pxToleranceS(EDGE_TOL_PX, domainMax, u.over.clientWidth)
+          u.over.style.cursor = cursorForTarget(hitTest(t, sectors, exclusions, tolS), false)
+          store.getState().setHoverT(t)
+          return
+        }
+        if (drag.target.kind === 'create') return
         const r = applyDrag(
           drag.target,
           drag.sectors0,
@@ -116,6 +146,10 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
         )
         store.getState().setSectors(r.sectors)
         store.getState().setExclusions(r.exclusions)
+      })
+      u.over.addEventListener('pointerleave', () => {
+        store.getState().setHoverT(null)
+        u.over.style.cursor = 'default'
       })
       const finish = (e: PointerEvent) => {
         const drag = dragRef.current
@@ -150,7 +184,7 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
       const opts: Options = {
         title: meta.label,
         width: container.clientWidth || 900,
-        height: 140,
+        height: 180,
         cursor: { sync: { key: SYNC_KEY }, drag: { x: false, y: false } },
         scales: { x: { time: false, min: 0, max: domainMax }, y: { dir: meta.invert ? -1 : 1 } },
         legend: { show: false },
@@ -171,9 +205,20 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
       panes.push(u)
     })
 
-    const unsub = store.subscribe(redrawAll)
+    // Redraw only when the overlay's inputs change — not on transient hoverT updates.
+    let ls = store.getState().sectors
+    let le = store.getState().exclusions
+    let lsel = store.getState().selectedSectorId
+    const unsub = store.subscribe(() => {
+      const s = store.getState()
+      if (s.sectors === ls && s.exclusions === le && s.selectedSectorId === lsel) return
+      ls = s.sectors
+      le = s.exclusions
+      lsel = s.selectedSectorId
+      redrawAll()
+    })
     const onResize = () =>
-      panes.forEach((p) => p.setSize({ width: container.clientWidth || 900, height: 140 }))
+      panes.forEach((p) => p.setSize({ width: container.clientWidth || 900, height: 180 }))
     window.addEventListener('resize', onResize)
 
     return () => {
@@ -192,7 +237,7 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
         {metas.map((m) => (
           <div
             key={m.key}
-            className="flex h-[140px] items-center justify-center rounded border border-line bg-surface text-xs text-ink-muted"
+            className="flex h-[180px] items-center justify-center rounded border border-line bg-surface text-xs text-ink-muted"
           >
             {m.label} chart
           </div>

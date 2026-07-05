@@ -50,7 +50,7 @@ export function LibraryScreen() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8">
       <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
         <AdsCard status={adsStatus} now={new Date()} />
         <ImportDropzone onFiles={(files) => void handleFiles(files)} />

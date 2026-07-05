@@ -35,14 +35,14 @@ export function TrendsScreen() {
 
   if (results.length === 0) {
     return (
-      <p className="text-sm text-ink-muted">
+      <p className="mx-auto max-w-5xl text-sm text-ink-muted">
         No test history yet. Run an AeT or AnT test from a run to start tracking trends.
       </p>
     )
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="mx-auto grid max-w-5xl gap-4 sm:grid-cols-2">
       <TrendChart title="AeT HR" unit="bpm" points={aetHr} colorHex="#ff6b6b" />
       <TrendChart title="AnT HR" unit="bpm" points={antHr} colorHex="#ff6b6b" />
       <TrendChart title="AeT decoupling" unit="%" points={decoupling} colorHex="#4cc9f0" />
