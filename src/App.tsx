@@ -10,7 +10,10 @@ import { TrendsScreen } from './app/screens/trends/trends-screen'
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
-      <header role="banner" className="flex items-baseline gap-3 border-b border-line px-6 py-3">
+      <header
+        role="banner"
+        className="sticky top-0 z-30 flex items-baseline gap-3 border-b border-line bg-bg px-6 py-3"
+      >
         <Link to="/" className="font-mono text-sm font-semibold uppercase tracking-[0.25em]">
           {BRAND}
         </Link>
