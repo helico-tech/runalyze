@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import uPlot, { type AlignedData, type Options } from 'uplot'
 import { useStore as useZustand } from 'zustand'
 import { efficiencySeries, rollingMean } from '../../../domain/analysis/efficiency'
+import { manualLaps } from '../../../domain/model/laps'
 import type { Activity, Exclusions, Sector, Series } from '../../../domain/model/types'
 import { CHANNELS, EFFICIENCY } from '../../channels'
 import type { WorkspaceStore } from './workspace-store'
@@ -115,6 +116,25 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
           grip(x0, 'rgba(91,157,255,0.9)')
           grip(x1, 'rgba(91,157,255,0.9)')
         }
+      }
+      // manual lap dividers (button-press boundaries) — display-only, dashed amber
+      const laps = manualLaps(activity)
+      if (laps.length > 0) {
+        const bounds = new Set<number>()
+        for (const l of laps) {
+          bounds.add(l.range.startS)
+          bounds.add(l.range.endS)
+        }
+        ctx.strokeStyle = 'rgba(245,165,36,0.55)'
+        ctx.setLineDash([4, 4])
+        for (const b of bounds) {
+          const x = xpos(b)
+          ctx.beginPath()
+          ctx.moveTo(x, top)
+          ctx.lineTo(x, top + h)
+          ctx.stroke()
+        }
+        ctx.setLineDash([])
       }
       ctx.restore()
     }

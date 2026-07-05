@@ -11,6 +11,7 @@ import { useTestResults } from '../../hooks'
 import { formatBpm, formatDuration } from '../../format'
 import { ChartStack } from './chart-stack'
 import { HoverReadout } from './hover-readout'
+import { LapTable } from './lap-table'
 import { NotesPanel } from './notes-panel'
 import { StatsPanel } from './stats-panel'
 import { TestPanel } from './test-panel'
@@ -257,6 +258,7 @@ function Workspace({
               selectedSectorId={selectedSectorId}
             />
           )}
+          <LapTable activity={activity} />
           <NotesPanel initialText={initialNote} onSave={saveNote} />
         </div>
       </div>
