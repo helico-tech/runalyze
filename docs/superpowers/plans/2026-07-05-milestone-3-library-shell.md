@@ -15,6 +15,23 @@
 - **Signature element:** the ADS readout card — a lab-instrument threshold meter (0–20% scale, redline tick at 10%, needle at the current gap) with test provenance lines beneath like a report footer. Present in every state, including empty.
 - **Copy:** sentence case, active, specific. Empty ≠ sad: "No runs yet. Drop a FIT file to begin."
 
+## Review amendments (apply during execution — supersede the task bodies below)
+
+Findings from the pre-execution review panel, each empirically verified by the reviewers:
+
+1. **tsconfig (Task 1 Step 2):** add ONLY `"paths": { "@/*": ["./src/*"] }` — NO `baseUrl` (TS 6 hard error TS5101; paths resolve against the tsconfig dir).
+2. **main.tsx (Tasks 1 & 6):** first import is `import '@fontsource-variable/inter/index.css'` (bare specifier fails TS2882).
+3. **fixtures helper (Task 1):** replace `src/adapters/testing/fixtures.ts` body with cwd-based resolution — `import { readFileSync } from 'node:fs'; import { join } from 'node:path'; export function fixtureBytes(name: string): Uint8Array { return new Uint8Array(readFileSync(join(process.cwd(), 'tests', 'fixtures', name))) }` (import.meta.url breaks under the jsdom transform).
+4. **Contract file (Task 4):** vitest import is `import { describe, expect, it } from 'vitest'` — no `afterEach` (unused → TS6133 + lint error).
+5. **import-service (Task 4):** wrap `repo.saveActivity` in try/catch; on failure push `{ status: 'error', filename, reason: 'could not save: ' + message }` — saves fail soft per file (spec §3.3/§5).
+6. **Duplicate toast (Task 6):** compute `const loneDuplicate = outcomes.length === 1 && outcomes[0]!.status === 'duplicate'` and only say "— opening it" when it actually navigates.
+7. **activity-summary (Task 3):** `distanceM` = LAST distance sample (cumulative from activity start), not last − first — matches device session totals ('9.04 km'); synthetic test unchanged (first sample is 0).
+8. **Session banner (Task 6):** render inside `App` above `<Routes>` (persists across routes, spec §3.3); the session-only test renders `App` in MemoryRouter + ContainerProvider instead of LibraryScreen.
+9. **AdsCard copy (Task 6):** interpolate `ADS_GAP_THRESHOLD_PCT` in the verdict sentences — no hardcoded "10%".
+10. **AdsCard ages (Task 6):** add `now: Date` prop; provenance lines show `(${Math.floor((now − testDate)/86400000)} d ago)`; tests pass a fixed now (2026-07-05 → AeT 34 d ago) and assert it; LibraryScreen passes `new Date()`.
+11. **Run rows (Task 6):** whole `<tr>` navigates (`onClick` + `cursor-pointer`), date keeps its `<Link>` for keyboard semantics; RunList uses `useNavigate`.
+12. **formatDate (Task 2):** local date parts (`getFullYear`/`getMonth`/`getDate`, zero-padded), not `toISOString`; pin `test: { env: { TZ: 'UTC' } }` in vite.config.ts so fixture date assertions stay deterministic.
+
 ## Global Constraints
 
 - Everything from milestones 1–2 Global Constraints applies (strict TS, domain purity, TDD, commit style, manifest rule).
