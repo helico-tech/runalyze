@@ -55,7 +55,7 @@ Findings from the pre-execution review panel (one agent executed the whole plan 
   - `applyDrag(target, sectors, ex, grabTimeS, currentTimeS, durationS, minWidthS): DragResult` — pure; clamps to `[0, durationS]`, enforces `minWidthS`, never lets warmup cross cooldown or a sector edge cross its partner. `move-sector` shifts by `currentTimeS − grabTimeS` preserving width.
   - `createSector(id, aS, bS, durationS, minWidthS): Sector | null` — from a dragged range; `null` if `|b − a| < minWidthS`; result clamped, `kind: 'sector'`, `label: ''`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/app/screens/activity/chart-geometry.test.ts`:
 
@@ -153,9 +153,9 @@ describe('createSector', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — `npm test`, cannot resolve module.
+- [x] **Step 2: Run to verify fail** — `npm test`, cannot resolve module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/app/screens/activity/chart-geometry.ts`:
 
@@ -281,7 +281,7 @@ export function createSector(
 }
 ```
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(workspace): pure chart geometry - hit-testing, drag application, sector creation"
@@ -300,13 +300,13 @@ git add -A && git commit -m "feat(workspace): pure chart geometry - hit-testing,
   - `src/app/channels.ts`: `type DisplayChannel = 'heartRate' | 'pace' | 'power' | 'cadence' | 'altitude'`; `interface ChannelMeta { key: DisplayChannel; sourceChannel: ChannelKind; label: string; colorHex: string; invert: boolean; format(v: number): string }`; `CHANNELS: ChannelMeta[]` (pace maps to `sourceChannel: 'speed'`, `invert: true`, `format` = pace string); `channelsPresent(a: Activity): ChannelMeta[]` (meta whose source channel exists).
   - workspace store (zustand): state `{ visible: Set<DisplayChannel>; driftChannel: DriftChannel; sectors: Sector[]; exclusions: Exclusions; selectedSectorId: string | null }` + actions `init(activity, sectors)`, `toggleChannel(c)`, `setDriftChannel(c)`, `setSectors(s)`, `setExclusions(e)`, `select(id)`, `removeSector(id)`. Store is created per-activity via a factory `createWorkspaceStore()` returning a `useStore` hook (avoids global singleton across activities).
 
-- [ ] **Step 1: Install zustand**
+- [x] **Step 1: Install zustand**
 
 ```bash
 npm install zustand
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `src/app/channels.test.ts`:
 
@@ -405,9 +405,9 @@ describe('workspace store', () => {
 })
 ```
 
-- [ ] **Step 3: Run to verify fail** — missing modules.
+- [x] **Step 3: Run to verify fail** — missing modules.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `src/app/channels.ts`:
 
@@ -543,7 +543,7 @@ export function useWorkspace<T>(store: WorkspaceStore, selector: (s: WorkspaceSt
 }
 ```
 
-- [ ] **Step 5: Verify pass; commit**
+- [x] **Step 5: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(workspace): channel metadata and per-activity Zustand store"
@@ -561,7 +561,7 @@ git add -A && git commit -m "feat(workspace): channel metadata and per-activity 
 - Consumes: geometry (Task 1), store (Task 2), channel meta, `nonExcludedRange`.
 - Produces: `ChartStack({ activity, store })` — renders one canvas-guarded uPlot pane per visible channel, synced crosshair, overlay bands for sectors + selected highlight + excluded shading, and pointer interactions that create/move/resize sectors and drag trims, committing to the store on pointer-up. **Not unit-tested** (canvas); the module guards `document.createElement('canvas').getContext('2d')` and renders labelled placeholders when absent so it stays importable in jsdom.
 
-- [ ] **Step 1: Import uPlot CSS**
+- [x] **Step 1: Import uPlot CSS**
 
 Add to `src/main.tsx` after `./index.css`:
 
@@ -569,7 +569,7 @@ Add to `src/main.tsx` after `./index.css`:
 import 'uplot/dist/uPlot.min.css'
 ```
 
-- [ ] **Step 2: Implement the chart stack**
+- [x] **Step 2: Implement the chart stack**
 
 `src/app/screens/activity/chart-stack.tsx`:
 
@@ -775,12 +775,12 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
 }
 ```
 
-- [ ] **Step 3: Typecheck, lint, build** (no unit test — canvas). Delete any genuinely-unused import to satisfy `noUnusedLocals`/eslint.
+- [x] **Step 3: Typecheck, lint, build** (no unit test — canvas). Delete any genuinely-unused import to satisfy `noUnusedLocals`/eslint.
 
 Run: `npm run lint && npm run build`
 Expected: exit 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "feat(workspace): uPlot chart stack with synced crosshair, sector/trim overlays and pointer editing"
@@ -797,7 +797,7 @@ git add -A && git commit -m "feat(workspace): uPlot chart stack with synced cros
 - Consumes: `sectorStats` (m1), `computeDecoupling` (m1), `nonExcludedRange`, channel meta, format utils.
 - Produces: `StatsPanel({ activity, sectors, exclusions, driftChannel, selectedSectorId })` — presentational. Shows a whole-run column (over the non-excluded range) and, when a sector is selected, that sector's per-channel avg/max, a first-half vs second-half table, and decoupling % over the sector for the drift channel (guarded: shows "—" when the drift channel or HR is missing or a half has no data).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/app/screens/activity/stats-panel.test.tsx`:
 
@@ -861,9 +861,9 @@ describe('StatsPanel', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing module.
+- [x] **Step 2: Run to verify fail** — missing module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/app/screens/activity/stats-panel.tsx`:
 
@@ -1011,7 +1011,7 @@ function SectorStatsBlock({
 }
 ```
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(workspace): stats panel with whole-run and per-sector splits and decoupling"
@@ -1027,7 +1027,7 @@ git add -A && git commit -m "feat(workspace): stats panel with whole-run and per
 **Interfaces:**
 - Produces: `NotesPanel({ initialText, onSave })` — a textarea that debounces (400ms) and calls `onSave(text)`; shows a subtle "saved" indicator after a successful save. Presentational; the screen wires `onSave` to the repo.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/app/screens/activity/notes-panel.test.tsx`:
 
@@ -1056,9 +1056,9 @@ describe('NotesPanel', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing module.
+- [x] **Step 2: Run to verify fail** — missing module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/app/screens/activity/notes-panel.tsx`:
 
@@ -1112,7 +1112,7 @@ export function NotesPanel({
 }
 ```
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(workspace): autosaving notes panel"
@@ -1130,7 +1130,7 @@ git add -A && git commit -m "feat(workspace): autosaving notes panel"
 - Consumes: everything above, container/hooks, repo.
 - Produces: the full workspace screen — loads the activity + its sectors + note, builds a per-activity store, renders the channel rail (visibility toggles + drift-channel selector), the chart stack, the stats panel, and the notes panel; **persists** sector changes (debounced), exclusion changes, and notes to the repo. A `use-workspace-persistence` hook subscribes to the store and writes through diffs (add/update/remove sectors, update exclusions). The jsdom test drives everything except the canvas (guarded placeholder) with a real `InMemoryLibraryRepository`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/app/screens/activity/activity-screen.test.tsx`:
 
@@ -1197,9 +1197,9 @@ describe('ActivityScreen workspace', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — the current placeholder screen has no rail/stats/notes.
+- [x] **Step 2: Run to verify fail** — the current placeholder screen has no rail/stats/notes.
 
-- [ ] **Step 3: Implement the persistence hook**
+- [x] **Step 3: Implement the persistence hook**
 
 `src/app/screens/activity/use-workspace-persistence.ts`:
 
@@ -1262,7 +1262,7 @@ export function useWorkspacePersistence(
 }
 ```
 
-- [ ] **Step 4: Rewrite the activity screen**
+- [x] **Step 4: Rewrite the activity screen**
 
 `src/app/screens/activity/activity-screen.tsx`:
 
@@ -1408,7 +1408,7 @@ function Workspace({
 }
 ```
 
-- [ ] **Step 5: Full gate; commit**
+- [x] **Step 5: Full gate; commit**
 
 Run: `npm test && npm run lint && npm run build`
 Expected: all green.
@@ -1424,8 +1424,8 @@ git add -A && git commit -m "feat(workspace): activity workspace screen wiring c
 
 ### Task 7: Visual verification
 
-- [ ] **Step 1:** `npm run dev`; with playwright-cli import `tests/fixtures/user-run-2026-07-05.fit`, open its workspace. Screenshot. Verify: stacked HR/pace/power/cadence/altitude panes render with channel colors; crosshair syncs across panes on hover; dragging on empty chart space creates a translucent sector; dragging its edges resizes it; the stats panel updates decoupling live; dragging the end handles shades a warmup region; typing a note persists (reload, note still there; sector still there).
-- [ ] **Step 2:** Fix visual/interaction defects; re-verify; commit. Screenshot the final workspace.
+- [x] **Step 1:** `npm run dev`; with playwright-cli import `tests/fixtures/user-run-2026-07-05.fit`, open its workspace. Screenshot. Verify: stacked HR/pace/power/cadence/altitude panes render with channel colors; crosshair syncs across panes on hover; dragging on empty chart space creates a translucent sector; dragging its edges resizes it; the stats panel updates decoupling live; dragging the end handles shades a warmup region; typing a note persists (reload, note still there; sector still there).
+- [x] **Step 2:** Fix visual/interaction defects; re-verify; commit. Screenshot the final workspace.
 
 ## Definition of done (milestone 4)
 
