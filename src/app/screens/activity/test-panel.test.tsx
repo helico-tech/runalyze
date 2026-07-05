@@ -30,7 +30,6 @@ describe('TestPanel AeT', () => {
         activity={aetActivity()}
         kind="aet"
         window={{ startS: 600, endS: 4200 }}
-        driftChannel="speed"
         onSave={onSave}
         onCancel={vi.fn()}
       />,
@@ -50,7 +49,6 @@ describe('TestPanel AeT', () => {
         activity={aetActivity()}
         kind="aet"
         window={{ startS: 600, endS: 1200 }}
-        driftChannel="speed"
         onSave={vi.fn()}
         onCancel={vi.fn()}
       />,
@@ -75,7 +73,6 @@ describe('TestPanel AnT', () => {
         activity={a}
         kind="ant"
         window={{ startS: 0, endS: 1800 }}
-        driftChannel="speed"
         onSave={onSave}
         onCancel={vi.fn()}
       />,

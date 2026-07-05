@@ -12,10 +12,9 @@ function aet(over: Partial<AetTestResult>): AetTestResult {
     testDate: new Date('2026-06-01T08:00:00Z'),
     createdAt: new Date('2026-06-01T10:00:00Z'),
     window: { startS: 600, endS: 4200 },
-    driftChannel: 'speed',
-    decouplingPct: 4.2,
+    pace: { decouplingPct: 4.2, verdict: 'at-aet' },
+    power: null,
     windowAvgHr: 148.2,
-    verdict: 'at-aet',
     aetHr: 148,
     ...over,
   }

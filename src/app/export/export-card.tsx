@@ -3,6 +3,7 @@ import { ADS_GAP_THRESHOLD_PCT } from '../../domain/analysis/protocol-constants'
 import type {
   Activity,
   AetTestResult,
+  AetVerdict,
   AntTestResult,
   Series,
   TestResult,
@@ -102,10 +103,21 @@ function Frame({ children }: { children: React.ReactNode }) {
 
 export function TestExportCard({ activity, result }: { activity: Activity; result: TestResult }) {
   const isAet = result.kind === 'aet'
-  const headline = isAet
-    ? `${(result as AetTestResult).decouplingPct.toFixed(1)}%`
+  const aet = isAet ? (result as AetTestResult) : null
+  const primary = aet ? (aet.pace ?? aet.power) : null
+  const headline = aet
+    ? primary
+      ? `${primary.decouplingPct.toFixed(1)}%`
+      : '—'
     : formatBpm((result as AntTestResult).antHr)
-  const badge = isAet ? AET_LABEL[(result as AetTestResult).verdict] : 'AnT HR'
+  const badge = aet ? (primary ? AET_LABEL[primary.verdict] : 'AeT') : 'AnT HR'
+  const channelLine = (label: string, ch: { decouplingPct: number; verdict: AetVerdict } | null) =>
+    ch ? (
+      <span>
+        {label} <span style={{ color: INK }}>{ch.decouplingPct.toFixed(1)}%</span> (
+        {AET_LABEL[ch.verdict]})
+      </span>
+    ) : null
   return (
     <Frame>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 20 }}>
@@ -128,10 +140,16 @@ export function TestExportCard({ activity, result }: { activity: Activity; resul
           {badge}
         </div>
       </div>
+      {aet && (
+        <div style={{ marginTop: 12, fontSize: 20, color: MUTED, display: 'flex', gap: 24 }}>
+          {channelLine('Pa:HR', aet.pace)}
+          {channelLine('Pw:HR', aet.power)}
+        </div>
+      )}
       <div style={{ marginTop: 16, fontSize: 20, color: MUTED }}>
-        {isAet && (result as AetTestResult).aetHr !== null && (
+        {aet && aet.aetHr !== null && (
           <span>
-            AeT HR <span style={{ color: HR }}>{formatBpm((result as AetTestResult).aetHr)}</span> ·{' '}
+            AeT HR <span style={{ color: HR }}>{formatBpm(aet.aetHr)}</span> ·{' '}
           </span>
         )}
         <span>

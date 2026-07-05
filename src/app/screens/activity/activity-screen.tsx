@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { useStore as useZustand } from 'zustand'
 import type { Activity, TestResult } from '../../../domain/model/types'
 import type { LibraryRepository } from '../../../domain/ports/library-repository'
-import { channelsPresent, driftChannelLabel } from '../../channels'
+import { channelsPresent } from '../../channels'
 import { ConfirmButton } from '../../components/confirm-button'
 import { useContainer } from '../../container-context'
 import { useTestResults } from '../../hooks'
@@ -80,7 +80,6 @@ function Workspace({
   const { results, refresh: refreshResults } = useTestResults()
   const activityTests = results.filter((r) => r.activityId === activity.id)
   const visible = useZustand(store, (s) => s.visible)
-  const driftChannel = useZustand(store, (s) => s.driftChannel)
   const sectors = useZustand(store, (s) => s.sectors)
   const exclusions = useZustand(store, (s) => s.exclusions)
   const selectedSectorId = useZustand(store, (s) => s.selectedSectorId)
@@ -111,8 +110,14 @@ function Workspace({
     void repo.deleteTestResult(id).then(refreshResults)
   }
 
-  const testKeyValue = (r: TestResult) =>
-    r.kind === 'aet' ? `${r.decouplingPct.toFixed(1)}% · ${formatBpm(r.aetHr)}` : formatBpm(r.antHr)
+  const testKeyValue = (r: TestResult) => {
+    if (r.kind === 'ant') return formatBpm(r.antHr)
+    const parts = [
+      r.pace ? `Pa ${r.pace.decouplingPct.toFixed(1)}%` : null,
+      r.power ? `Pw ${r.power.decouplingPct.toFixed(1)}%` : null,
+    ].filter(Boolean)
+    return `${parts.join(' · ')} · ${formatBpm(r.aetHr)}`
+  }
 
   const saveNote = useCallback(
     (text: string) => void repo.saveNote({ activityId: activity.id, text, updatedAt: new Date() }),
@@ -140,24 +145,6 @@ function Workspace({
             {c.label}
           </button>
         ))}
-        <span className="ml-auto flex items-center gap-2 font-mono text-xs text-ink-muted">
-          drift
-          {(['speed', 'power'] as const).map((d) => (
-            <button
-              key={d}
-              type="button"
-              disabled={d === 'power' && !activity.channels.power}
-              onClick={() => store.getState().setDriftChannel(d)}
-              className={cn(
-                'rounded border border-line px-2 py-1',
-                driftChannel === d ? 'bg-surface-2 text-ink' : 'text-ink-muted',
-                d === 'power' && !activity.channels.power && 'opacity-40',
-              )}
-            >
-              {driftChannelLabel(d)}
-            </button>
-          ))}
-        </span>
       </div>
 
       <div className="flex items-center gap-2 font-mono text-xs text-ink-muted">
@@ -240,7 +227,6 @@ function Workspace({
               activity={activity}
               kind={activeTest}
               window={testWindow}
-              driftChannel={driftChannel}
               onSave={handleSaveResult}
               onCancel={() => store.getState().cancelTest()}
               renderer={renderer}
@@ -250,7 +236,6 @@ function Workspace({
               activity={activity}
               sectors={userSectors}
               exclusions={exclusions}
-              driftChannel={driftChannel}
               selectedSectorId={selectedSectorId}
             />
           )}

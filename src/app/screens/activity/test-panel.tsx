@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   buildAetResult,
   evaluateAetTest,
+  type AetChannelEval,
   type AetEvaluation,
 } from '../../../domain/analysis/aet-protocol'
 import {
@@ -9,11 +10,10 @@ import {
   evaluateAntTest,
   type AntEvaluation,
 } from '../../../domain/analysis/ant-protocol'
-import type { Activity, DriftChannel, TestResult, TimeRange } from '../../../domain/model/types'
+import type { Activity, TestResult, TimeRange } from '../../../domain/model/types'
 import type { ImageRenderer } from '../../../domain/ports/image-renderer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import { formatBpm, formatDate, formatDuration } from '../../format'
 import { ExportPreview } from '../../export/export-preview'
 import { TestExportCard } from '../../export/export-card'
@@ -39,7 +39,6 @@ export function TestPanel({
   activity,
   kind,
   window,
-  driftChannel,
   onSave,
   onCancel,
   renderer,
@@ -47,7 +46,6 @@ export function TestPanel({
   activity: Activity
   kind: TestKind
   window: TimeRange
-  driftChannel: DriftChannel
   onSave: (r: TestResult) => void
   onCancel: () => void
   renderer?: ImageRenderer
@@ -57,10 +55,7 @@ export function TestPanel({
   let evaluation: AetEvaluation | AntEvaluation | null = null
   let error: string | null = null
   try {
-    evaluation =
-      kind === 'aet'
-        ? evaluateAetTest(activity, window, driftChannel)
-        : evaluateAntTest(activity, window)
+    evaluation = kind === 'aet' ? evaluateAetTest(activity, window) : evaluateAntTest(activity, window)
   } catch (e) {
     error = e instanceof Error ? e.message : String(e)
   }
@@ -75,7 +70,6 @@ export function TestPanel({
           id,
           activity,
           window,
-          driftChannel,
           evaluation: evaluation as AetEvaluation,
           createdAt,
           acceptAetHr: accept,
@@ -89,8 +83,7 @@ export function TestPanel({
   }
 
   const aet = kind === 'aet' && evaluation ? (evaluation as AetEvaluation) : null
-  const aboveAet = aet?.verdict === 'above-aet'
-  const showAccept = aet !== null && aet.verdict !== 'at-aet' && aet.valid
+  const showAccept = aet !== null && !aet.atAet && aet.valid
 
   return (
     <div className="space-y-4 rounded-lg border border-line bg-surface p-4 font-mono text-sm">
@@ -119,16 +112,9 @@ export function TestPanel({
       )}
 
       {showAccept && (
-        <label
-          className={cn(
-            'flex items-center gap-2 text-xs',
-            aboveAet ? 'text-caution' : 'text-ink-muted',
-          )}
-        >
+        <label className="flex items-center gap-2 text-xs text-ink-muted">
           <input type="checkbox" checked={accept} onChange={(e) => setAccept(e.target.checked)} />
-          {aboveAet
-            ? 'Force-accept this HR as AeT despite it being above AeT'
-            : 'Accept the window average as my AeT HR anyway'}
+          Accept the window average as my AeT HR anyway
         </label>
       )}
 
@@ -159,20 +145,42 @@ export function TestPanel({
   )
 }
 
+function ChannelRow({ label, ch }: { label: string; ch: AetChannelEval | null }) {
+  if (!ch) {
+    return (
+      <div className="flex items-baseline justify-between">
+        <span className="text-ink-muted">{label}</span>
+        <span className="text-ink-muted">—</span>
+      </div>
+    )
+  }
+  return (
+    <div>
+      <div className="flex items-baseline justify-between">
+        <span className="text-ink-muted">{label}</span>
+        <span className="flex items-baseline gap-2">
+          <span className="text-2xl font-semibold tabular-nums">
+            {ch.decoupling.decouplingPct.toFixed(1)}%
+          </span>
+          <Badge
+            variant={
+              ch.verdict === 'at-aet' ? 'ok' : ch.verdict === 'above-aet' ? 'danger' : 'caution'
+            }
+          >
+            {AET_LABEL[ch.verdict]}
+          </Badge>
+        </span>
+      </div>
+      <p className="text-[11px] text-ink-muted">{AET_GUIDANCE[ch.verdict]}</p>
+    </div>
+  )
+}
+
 function AetBody({ e }: { e: AetEvaluation }) {
   return (
-    <div className="space-y-2">
-      <div className="flex items-baseline justify-between">
-        <span className="text-3xl font-semibold tabular-nums">
-          {e.decoupling.decouplingPct.toFixed(1)}%
-        </span>
-        <Badge
-          variant={e.verdict === 'at-aet' ? 'ok' : e.verdict === 'above-aet' ? 'danger' : 'caution'}
-        >
-          {AET_LABEL[e.verdict]}
-        </Badge>
-      </div>
-      <p className="text-xs text-ink-muted">{AET_GUIDANCE[e.verdict]}</p>
+    <div className="space-y-3">
+      <ChannelRow label="Pa:HR" ch={e.pace} />
+      <ChannelRow label="Pw:HR" ch={e.power} />
       <p className="text-xs">
         Window avg HR <span className="text-ch-hr">{formatBpm(e.windowAvgHr)}</span>
         {e.suggestedAetHr !== null && (

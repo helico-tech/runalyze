@@ -1,4 +1,4 @@
-import type { Activity, ChannelKind, DriftChannel } from '../domain/model/types'
+import type { Activity, ChannelKind } from '../domain/model/types'
 import { formatPace } from './format'
 
 export type DisplayChannel = 'heartRate' | 'pace' | 'power' | 'cadence' | 'altitude'
@@ -54,11 +54,6 @@ export const CHANNELS: ChannelMeta[] = [
     format: (v) => String(Math.round(v)),
   },
 ]
-
-/** The DriftChannel selector (speed|power) maps to these display channels' sources. */
-export function driftChannelLabel(c: DriftChannel): string {
-  return c === 'speed' ? 'Pace (Pa:HR)' : 'Power (Pw:HR)'
-}
 
 export function channelsPresent(a: Activity): ChannelMeta[] {
   return CHANNELS.filter((c) => a.channels[c.sourceChannel] !== undefined)
