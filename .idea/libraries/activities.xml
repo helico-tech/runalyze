@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="activities">
-    <CLASSES>
-      <root url="jar://$PROJECT_DIR$/tests/fixtures/activities.zip!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
