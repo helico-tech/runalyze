@@ -5,8 +5,10 @@ import { useStore as useZustand } from 'zustand'
 import type { Activity, TestResult } from '../../../domain/model/types'
 import type { LibraryRepository } from '../../../domain/ports/library-repository'
 import { channelsPresent, driftChannelLabel } from '../../channels'
+import { ConfirmButton } from '../../components/confirm-button'
 import { useContainer } from '../../container-context'
-import { formatDuration } from '../../format'
+import { useTestResults } from '../../hooks'
+import { formatBpm, formatDuration } from '../../format'
 import { ChartStack } from './chart-stack'
 import { HoverReadout } from './hover-readout'
 import { NotesPanel } from './notes-panel'
@@ -75,6 +77,8 @@ function Workspace({
   repo: LibraryRepository
 }) {
   const { renderer } = useContainer()
+  const { results, refresh: refreshResults } = useTestResults()
+  const activityTests = results.filter((r) => r.activityId === activity.id)
   const visible = useZustand(store, (s) => s.visible)
   const driftChannel = useZustand(store, (s) => s.driftChannel)
   const sectors = useZustand(store, (s) => s.sectors)
@@ -98,10 +102,17 @@ function Workspace({
   }
 
   const handleSaveResult = (result: TestResult) => {
-    void repo.saveTestResult(result)
+    void repo.saveTestResult(result).then(refreshResults)
     toast.success(`Saved ${result.kind.toUpperCase()} test`)
     store.getState().cancelTest()
   }
+
+  const deleteTest = (id: string) => {
+    void repo.deleteTestResult(id).then(refreshResults)
+  }
+
+  const testKeyValue = (r: TestResult) =>
+    r.kind === 'aet' ? `${r.decouplingPct.toFixed(1)}% · ${formatBpm(r.aetHr)}` : formatBpm(r.antHr)
 
   const saveNote = useCallback(
     (text: string) => void repo.saveNote({ activityId: activity.id, text, updatedAt: new Date() }),
@@ -172,6 +183,26 @@ function Workspace({
           </button>
         ))}
       </div>
+
+      {activityTests.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+          <span className="text-ink-muted">saved tests</span>
+          {activityTests.map((r) => (
+            <span
+              key={r.id}
+              className="flex items-center gap-2 rounded border border-line px-2 py-1"
+            >
+              <span className="uppercase text-ink-muted">{r.kind}</span>
+              <span className="tabular-nums">{testKeyValue(r)}</span>
+              <ConfirmButton
+                label="delete"
+                confirmLabel="confirm"
+                onConfirm={() => deleteTest(r.id)}
+              />
+            </span>
+          ))}
+        </div>
+      )}
 
       {userSectors.length > 0 && (
         <div className="flex flex-wrap gap-2">
