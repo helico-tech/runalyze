@@ -1,20 +1,6 @@
+import { nearestIndex } from '../../../domain/model/series'
 import type { Activity } from '../../../domain/model/types'
-import { CHANNELS, type DisplayChannel } from '../../channels'
-
-export function nearestIndex(t: Float64Array, target: number): number {
-  const n = t.length
-  if (n === 0) return -1
-  let lo = 0
-  let hi = n - 1
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1
-    if (t[mid]! < target) lo = mid + 1
-    else hi = mid
-  }
-  // lo is the first index with t[lo] >= target; compare with lo-1 for the nearer one
-  if (lo > 0 && Math.abs(t[lo - 1]! - target) <= Math.abs(t[lo]! - target)) return lo - 1
-  return lo
-}
+import { CHANNELS, EFFICIENCY, type DisplayChannel } from '../../channels'
 
 export interface HoverValue {
   key: DisplayChannel
@@ -31,6 +17,19 @@ export function channelValuesAt(activity: Activity, tS: number): HoverValue[] {
     const i = nearestIndex(series.t, tS)
     if (i < 0) continue
     out.push({ key: c.key, label: c.label, colorHex: c.colorHex, text: c.format(series.v[i]!) })
+  }
+  const hr = activity.channels.heartRate
+  if (hr && hr.t.length > 0) {
+    for (const e of EFFICIENCY) {
+      const output = activity.channels[e.requires]
+      if (!output || output.t.length === 0) continue
+      const hi = nearestIndex(hr.t, tS)
+      const oi = nearestIndex(output.t, tS)
+      const h = hr.v[hi]!
+      const o = output.v[oi]!
+      if (!Number.isFinite(h) || h <= 0 || !Number.isFinite(o)) continue
+      out.push({ key: e.key, label: e.label, colorHex: e.colorHex, text: e.format((e.scale * o) / h) })
+    }
   }
   return out
 }

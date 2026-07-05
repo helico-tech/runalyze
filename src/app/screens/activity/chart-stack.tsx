@@ -1,9 +1,20 @@
 import { useEffect, useRef } from 'react'
 import uPlot, { type AlignedData, type Options } from 'uplot'
 import { useStore as useZustand } from 'zustand'
-import type { Activity, Exclusions, Sector } from '../../../domain/model/types'
-import { CHANNELS } from '../../channels'
+import { efficiencySeries, rollingMean } from '../../../domain/analysis/efficiency'
+import type { Activity, Exclusions, Sector, Series } from '../../../domain/model/types'
+import { CHANNELS, EFFICIENCY } from '../../channels'
 import type { WorkspaceStore } from './workspace-store'
+
+interface PaneSpec {
+  label: string
+  colorHex: string
+  invert: boolean
+  format: (v: number) => string
+  series: Series
+}
+
+const EF_SMOOTH_S = 30
 import {
   applyDrag,
   createSector,
@@ -38,8 +49,11 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
   const containerRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<Drag | null>(null)
 
-  const metas = CHANNELS.filter((c) => visible.has(c.key) && activity.channels[c.sourceChannel])
-  const metaKeys = metas.map((m) => m.key).join(',')
+  const rawMetas = CHANNELS.filter((c) => visible.has(c.key) && activity.channels[c.sourceChannel])
+  const effMetas = EFFICIENCY.filter(
+    (e) => visible.has(e.key) && activity.channels[e.requires] && activity.channels.heartRate,
+  )
+  const paneKeys = [...rawMetas.map((m) => m.key), ...effMetas.map((e) => e.key)].join(',')
 
   useEffect(() => {
     if (!canvasAvailable || !containerRef.current) return
@@ -176,17 +190,36 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
       })
     }
 
-    metas.forEach((meta) => {
+    const paneSpecs: PaneSpec[] = [
+      ...rawMetas.map((m) => ({
+        label: m.label,
+        colorHex: m.colorHex,
+        invert: m.invert,
+        format: m.format,
+        series: activity.channels[m.sourceChannel]!,
+      })),
+      ...effMetas.map((e) => ({
+        label: e.label,
+        colorHex: e.colorHex,
+        invert: false,
+        format: e.format,
+        series: rollingMean(
+          efficiencySeries(activity.channels[e.requires]!, activity.channels.heartRate!, e.scale),
+          EF_SMOOTH_S,
+        ),
+      })),
+    ]
+
+    paneSpecs.forEach((spec) => {
       const paneEl = document.createElement('div')
       container.appendChild(paneEl)
-      const series = activity.channels[meta.sourceChannel]!
-      const data: AlignedData = [series.t, series.v]
+      const data: AlignedData = [spec.series.t, spec.series.v]
       const opts: Options = {
-        title: meta.label,
+        title: spec.label,
         width: container.clientWidth || 900,
         height: 180,
         cursor: { sync: { key: SYNC_KEY }, drag: { x: false, y: false } },
-        scales: { x: { time: false, min: 0, max: domainMax }, y: { dir: meta.invert ? -1 : 1 } },
+        scales: { x: { time: false, min: 0, max: domainMax }, y: { dir: spec.invert ? -1 : 1 } },
         legend: { show: false },
         axes: [
           { stroke: '#8a97a5', grid: { stroke: '#232b36' }, ticks: { stroke: '#232b36' } },
@@ -194,10 +227,10 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
             stroke: '#8a97a5',
             grid: { stroke: '#232b36' },
             ticks: { stroke: '#232b36' },
-            values: (_u, splits) => splits.map((v) => meta.format(v)),
+            values: (_u, splits) => splits.map((v) => spec.format(v)),
           },
         ],
-        series: [{}, { stroke: meta.colorHex, width: 1.25, points: { show: false } }],
+        series: [{}, { stroke: spec.colorHex, width: 1.25, points: { show: false } }],
         plugins: [{ hooks: { draw: overlay } }],
       }
       const u = new uPlot(opts, data, paneEl)
@@ -229,12 +262,12 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
     }
     // rebuild when the activity or visible-channel set changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activity, store, metaKeys])
+  }, [activity, store, paneKeys])
 
   if (!canvasAvailable) {
     return (
       <div ref={containerRef} data-testid="chart-stack-placeholder" className="space-y-3">
-        {metas.map((m) => (
+        {[...rawMetas, ...effMetas].map((m) => (
           <div
             key={m.key}
             className="flex h-[180px] items-center justify-center rounded border border-line bg-surface text-xs text-ink-muted"

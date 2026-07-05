@@ -32,7 +32,6 @@ describe('StatsPanel', () => {
         activity={activity()}
         sectors={[]}
         exclusions={{ warmupEndS: 0, cooldownStartS: 3600 }}
-        driftChannel="speed"
         selectedSectorId={null}
       />,
     )
@@ -45,7 +44,6 @@ describe('StatsPanel', () => {
         activity={activity()}
         sectors={[sector]}
         exclusions={{ warmupEndS: 0, cooldownStartS: 3600 }}
-        driftChannel="speed"
         selectedSectorId="s1"
       />,
     )

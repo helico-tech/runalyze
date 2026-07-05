@@ -1,17 +1,10 @@
 import { createStore, useStore as useZustandStore } from 'zustand'
-import type {
-  Activity,
-  DriftChannel,
-  Exclusions,
-  Sector,
-  TimeRange,
-} from '../../../domain/model/types'
-import { channelsPresent, type DisplayChannel } from '../../channels'
+import type { Activity, Exclusions, Sector, TimeRange } from '../../../domain/model/types'
+import { channelsPresent, efficiencyPresent, type DisplayChannel } from '../../channels'
 import { TEST_WINDOW_ID, testWindowSector, type TestKind } from './test-window'
 
 export interface WorkspaceState {
   visible: Set<DisplayChannel>
-  driftChannel: DriftChannel
   sectors: Sector[]
   exclusions: Exclusions
   selectedSectorId: string | null
@@ -19,7 +12,6 @@ export interface WorkspaceState {
   hoverT: number | null
   init(activity: Activity, sectors: Sector[]): void
   toggleChannel(c: DisplayChannel): void
-  setDriftChannel(c: DriftChannel): void
   setSectors(sectors: Sector[]): void
   setExclusions(ex: Exclusions): void
   select(id: string | null): void
@@ -34,7 +26,6 @@ export type WorkspaceStore = ReturnType<typeof createWorkspaceStore>
 export function createWorkspaceStore() {
   return createStore<WorkspaceState>((set) => ({
     visible: new Set(),
-    driftChannel: 'speed',
     sectors: [],
     exclusions: { warmupEndS: 0, cooldownStartS: 0 },
     selectedSectorId: null,
@@ -42,8 +33,10 @@ export function createWorkspaceStore() {
     hoverT: null,
     init: (activity, sectors) =>
       set({
-        visible: new Set(channelsPresent(activity).map((c) => c.key)),
-        driftChannel: 'speed',
+        visible: new Set<DisplayChannel>([
+          ...channelsPresent(activity).map((c) => c.key),
+          ...efficiencyPresent(activity).map((e) => e.key),
+        ]),
         sectors,
         exclusions: activity.exclusions,
         selectedSectorId: null,
@@ -57,7 +50,6 @@ export function createWorkspaceStore() {
         else visible.add(c)
         return { visible }
       }),
-    setDriftChannel: (driftChannel) => set({ driftChannel }),
     setSectors: (sectors) => set({ sectors }),
     setExclusions: (exclusions) => set({ exclusions }),
     select: (selectedSectorId) => set({ selectedSectorId }),

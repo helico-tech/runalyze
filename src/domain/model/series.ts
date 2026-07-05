@@ -28,3 +28,18 @@ export function nonExcludedRange(a: Activity): TimeRange {
 export function overlapsExclusion(a: Activity, w: TimeRange): boolean {
   return w.startS < a.exclusions.warmupEndS || w.endS > a.exclusions.cooldownStartS
 }
+
+/** Index of the sample whose time is nearest `target`; −1 for an empty array. */
+export function nearestIndex(t: Float64Array, target: number): number {
+  const n = t.length
+  if (n === 0) return -1
+  let lo = 0
+  let hi = n - 1
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (t[mid]! < target) lo = mid + 1
+    else hi = mid
+  }
+  if (lo > 0 && Math.abs(t[lo - 1]! - target) <= Math.abs(t[lo]! - target)) return lo - 1
+  return lo
+}

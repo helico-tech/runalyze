@@ -15,10 +15,9 @@ const aet: AetTestResult = {
   testDate: new Date('2026-07-05T06:45:13.000Z'),
   createdAt: new Date('2026-07-05T09:00:00.000Z'),
   window: { startS: 0, endS: 3600 },
-  driftChannel: 'speed',
-  decouplingPct: 3.56,
+  pace: { decouplingPct: 3.56, verdict: 'at-aet' },
+  power: null,
   windowAvgHr: 159,
-  verdict: 'at-aet',
   aetHr: 159,
 }
 const ant: AntTestResult = {
@@ -48,8 +47,9 @@ describe('TestExportCard', () => {
   it('renders the verdict, numbers, and brand', () => {
     render(<TestExportCard activity={activity()} result={aet} />)
     expect(screen.getByText(/runalyze/i)).toBeInTheDocument()
-    expect(screen.getByText('3.6%')).toBeInTheDocument()
+    expect(screen.getAllByText('3.6%').length).toBeGreaterThan(0) // headline + Pa:HR line
     expect(screen.getByText('At AeT')).toBeInTheDocument()
+    expect(screen.getByText(/Pa:HR/)).toBeInTheDocument()
     expect(screen.getAllByText('159 bpm').length).toBeGreaterThan(0)
     expect(screen.getByText('2026-07-05')).toBeInTheDocument()
   })

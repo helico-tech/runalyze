@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { useStore as useZustand } from 'zustand'
 import type { Activity, TestResult } from '../../../domain/model/types'
 import type { LibraryRepository } from '../../../domain/ports/library-repository'
-import { channelsPresent, driftChannelLabel } from '../../channels'
+import { channelsPresent, efficiencyPresent } from '../../channels'
 import { ConfirmButton } from '../../components/confirm-button'
 import { useContainer } from '../../container-context'
 import { useTestResults } from '../../hooks'
@@ -80,12 +80,12 @@ function Workspace({
   const { results, refresh: refreshResults } = useTestResults()
   const activityTests = results.filter((r) => r.activityId === activity.id)
   const visible = useZustand(store, (s) => s.visible)
-  const driftChannel = useZustand(store, (s) => s.driftChannel)
   const sectors = useZustand(store, (s) => s.sectors)
   const exclusions = useZustand(store, (s) => s.exclusions)
   const selectedSectorId = useZustand(store, (s) => s.selectedSectorId)
   const activeTest = useZustand(store, (s) => s.activeTest)
   const present = useMemo(() => channelsPresent(activity), [activity])
+  const effPresent = useMemo(() => efficiencyPresent(activity), [activity])
   const testWindow = sectors.find((s) => s.id === TEST_WINDOW_ID)?.range ?? null
   const userSectors = sectors.filter((s) => s.id !== TEST_WINDOW_ID)
   const suggestions = useMemo(
@@ -111,8 +111,14 @@ function Workspace({
     void repo.deleteTestResult(id).then(refreshResults)
   }
 
-  const testKeyValue = (r: TestResult) =>
-    r.kind === 'aet' ? `${r.decouplingPct.toFixed(1)}% · ${formatBpm(r.aetHr)}` : formatBpm(r.antHr)
+  const testKeyValue = (r: TestResult) => {
+    if (r.kind === 'ant') return formatBpm(r.antHr)
+    const parts = [
+      r.pace ? `Pa ${r.pace.decouplingPct.toFixed(1)}%` : null,
+      r.power ? `Pw ${r.power.decouplingPct.toFixed(1)}%` : null,
+    ].filter(Boolean)
+    return `${parts.join(' · ')} · ${formatBpm(r.aetHr)}`
+  }
 
   const saveNote = useCallback(
     (text: string) => void repo.saveNote({ activityId: activity.id, text, updatedAt: new Date() }),
@@ -140,24 +146,20 @@ function Workspace({
             {c.label}
           </button>
         ))}
-        <span className="ml-auto flex items-center gap-2 font-mono text-xs text-ink-muted">
-          drift
-          {(['speed', 'power'] as const).map((d) => (
-            <button
-              key={d}
-              type="button"
-              disabled={d === 'power' && !activity.channels.power}
-              onClick={() => store.getState().setDriftChannel(d)}
-              className={cn(
-                'rounded border border-line px-2 py-1',
-                driftChannel === d ? 'bg-surface-2 text-ink' : 'text-ink-muted',
-                d === 'power' && !activity.channels.power && 'opacity-40',
-              )}
-            >
-              {driftChannelLabel(d)}
-            </button>
-          ))}
-        </span>
+        {effPresent.map((e) => (
+          <button
+            key={e.key}
+            type="button"
+            onClick={() => store.getState().toggleChannel(e.key)}
+            className={cn(
+              'rounded border px-2 py-1 font-mono text-xs',
+              visible.has(e.key) ? 'border-line bg-surface-2' : 'border-line/50 text-ink-muted',
+            )}
+            style={visible.has(e.key) ? { color: e.colorHex } : undefined}
+          >
+            {e.label}
+          </button>
+        ))}
       </div>
 
       <div className="flex items-center gap-2 font-mono text-xs text-ink-muted">
@@ -240,7 +242,6 @@ function Workspace({
               activity={activity}
               kind={activeTest}
               window={testWindow}
-              driftChannel={driftChannel}
               onSave={handleSaveResult}
               onCancel={() => store.getState().cancelTest()}
               renderer={renderer}
@@ -250,7 +251,6 @@ function Workspace({
               activity={activity}
               sectors={userSectors}
               exclusions={exclusions}
-              driftChannel={driftChannel}
               selectedSectorId={selectedSectorId}
             />
           )}

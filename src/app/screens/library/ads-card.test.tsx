@@ -16,10 +16,9 @@ const aet: AetTestResult = {
   testDate: new Date('2026-06-01T08:00:00Z'),
   createdAt: new Date('2026-06-01T08:00:00Z'),
   window: { startS: 0, endS: 3600 },
-  driftChannel: 'speed',
-  decouplingPct: 4.2,
+  pace: { decouplingPct: 4.2, verdict: 'at-aet' },
+  power: null,
   windowAvgHr: 148.2,
-  verdict: 'at-aet',
   aetHr: 148,
 }
 const ant: AntTestResult = {

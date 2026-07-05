@@ -23,7 +23,11 @@ export function TrendsScreen() {
       .filter((r) => r.aetHr !== null)
       .map((r) => ({ t: r.testDate.getTime(), v: r.aetHr! }))
     const antHr: Point[] = ants.map((r) => ({ t: r.testDate.getTime(), v: r.antHr }))
-    const decoupling: Point[] = aets.map((r) => ({ t: r.testDate.getTime(), v: r.decouplingPct }))
+    // Pa:HR decoupling where present, else Pw:HR
+    const decoupling: Point[] = aets
+      .map((r) => ({ t: r.testDate.getTime(), pct: (r.pace ?? r.power)?.decouplingPct }))
+      .filter((p): p is Point & { pct: number } => p.pct !== undefined)
+      .map((p) => ({ t: p.t, v: p.pct }))
     // ADS gap over time: pair each AnT with the most recent prior AeT that has an HR
     const gap: Point[] = ants
       .map((ant): Point | null => {
@@ -46,8 +50,14 @@ export function TrendsScreen() {
   }
 
   const log = [...results].sort((a, b) => b.testDate.getTime() - a.testDate.getTime())
-  const keyValue = (r: TestResult) =>
-    r.kind === 'aet' ? `${r.decouplingPct.toFixed(1)}% · ${formatBpm(r.aetHr)}` : formatBpm(r.antHr)
+  const keyValue = (r: TestResult) => {
+    if (r.kind === 'ant') return formatBpm(r.antHr)
+    const parts = [
+      r.pace ? `Pa ${r.pace.decouplingPct.toFixed(1)}%` : null,
+      r.power ? `Pw ${r.power.decouplingPct.toFixed(1)}%` : null,
+    ].filter(Boolean)
+    return `${parts.join(' · ')} · ${formatBpm(r.aetHr)}`
+  }
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">

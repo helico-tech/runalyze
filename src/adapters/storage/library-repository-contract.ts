@@ -25,10 +25,9 @@ const testResult: AetTestResult = {
   testDate: new Date('2026-07-01T08:00:00Z'),
   createdAt: new Date('2026-07-01T10:00:00Z'),
   window: { startS: 0, endS: 3600 },
-  driftChannel: 'speed',
-  decouplingPct: 4.2,
+  pace: { decouplingPct: 4.2, verdict: 'at-aet' },
+  power: null,
   windowAvgHr: 150.4,
-  verdict: 'at-aet',
   aetHr: 150,
 }
 

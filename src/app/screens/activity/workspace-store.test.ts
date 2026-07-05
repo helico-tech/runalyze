@@ -30,7 +30,8 @@ describe('workspace store', () => {
     const s = store.getState()
     expect([...s.visible]).toContain('heartRate')
     expect([...s.visible]).toContain('pace')
-    expect(s.driftChannel).toBe('speed')
+    expect([...s.visible]).toContain('efPace') // efficiency curves default-visible
+    expect([...s.visible]).toContain('efPower')
     expect(s.exclusions).toEqual({ warmupEndS: 120, cooldownStartS: 3600 })
     expect(s.sectors).toHaveLength(1)
   })
@@ -54,12 +55,6 @@ describe('workspace store', () => {
     expect(store.getState().selectedSectorId).toBeNull()
   })
 
-  it('sets drift channel', () => {
-    const store = createWorkspaceStore()
-    store.getState().init(activity(), [])
-    store.getState().setDriftChannel('power')
-    expect(store.getState().driftChannel).toBe('power')
-  })
 })
 
 describe('workspace store test mode', () => {

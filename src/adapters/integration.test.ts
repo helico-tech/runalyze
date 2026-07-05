@@ -38,8 +38,10 @@ describe('integration: parse -> store -> analyze on real files', () => {
     expect(computeDecoupling(speed, hr, WINDOW).decouplingPct).toBeCloseTo(3.5606, 3)
     expect(computeDecoupling(power, hr, WINDOW).decouplingPct).toBeCloseTo(2.4284, 3)
 
-    const evaluation = evaluateAetTest(loaded, WINDOW, 'speed')
-    expect(evaluation.verdict).toBe('at-aet')
+    const evaluation = evaluateAetTest(loaded, WINDOW)
+    expect(evaluation.pace!.verdict).toBe('at-aet') // Pa:HR 3.56%
+    expect(evaluation.power!.verdict).toBe('below-aet') // Pw:HR 2.43%
+    expect(evaluation.atAet).toBe(true)
     expect(evaluation.valid).toBe(true)
     expect(evaluation.windowAvgHr).toBeCloseTo(159.0103, 2)
     expect(evaluation.suggestedAetHr).toBe(159)

@@ -2,17 +2,11 @@ import { computeDecoupling } from '../../../domain/analysis/decoupling'
 import { sectorStats } from '../../../domain/analysis/sector-stats'
 import { windowStats } from '../../../domain/analysis/stats'
 import { nonExcludedRange } from '../../../domain/model/series'
-import type {
-  Activity,
-  DriftChannel,
-  Exclusions,
-  Sector,
-  TimeRange,
-} from '../../../domain/model/types'
+import type { Activity, Exclusions, Sector, TimeRange } from '../../../domain/model/types'
 import { CHANNELS } from '../../channels'
 import { formatDuration } from '../../format'
 
-function decouplingText(a: Activity, range: TimeRange, drift: DriftChannel): string {
+function decouplingText(a: Activity, range: TimeRange, drift: 'speed' | 'power'): string {
   const out = a.channels[drift]
   const hr = a.channels.heartRate
   if (!out || !hr) return '—'
@@ -50,13 +44,11 @@ export function StatsPanel({
   activity,
   sectors,
   exclusions,
-  driftChannel,
   selectedSectorId,
 }: {
   activity: Activity
   sectors: Sector[]
   exclusions: Exclusions
-  driftChannel: DriftChannel
   selectedSectorId: string | null
 }) {
   const whole = nonExcludedRange({ ...activity, exclusions })
@@ -82,36 +74,31 @@ export function StatsPanel({
         </table>
       </section>
 
-      {selected && (
-        <SectorStatsBlock activity={activity} range={selected.range} driftChannel={driftChannel} />
-      )}
+      {selected && <SectorStatsBlock activity={activity} range={selected.range} />}
     </div>
   )
 }
 
-function SectorStatsBlock({
-  activity,
-  range,
-  driftChannel,
-}: {
-  activity: Activity
-  range: TimeRange
-  driftChannel: DriftChannel
-}) {
+function SectorStatsBlock({ activity, range }: { activity: Activity; range: TimeRange }) {
   const stats = sectorStats(activity, range)
-  const driftLabel = driftChannel === 'speed' ? 'Pa:HR' : 'Pw:HR'
   return (
     <section>
       <h3 className="mb-1 text-[10px] uppercase tracking-widest text-ink-muted">
         Sector · {formatDuration(range.endS - range.startS)}
       </h3>
-      <div className="mb-3 flex items-baseline justify-between rounded border border-line bg-surface px-3 py-2">
-        <span className="text-[10px] uppercase tracking-widest text-ink-muted">
-          Decoupling ({driftLabel})
-        </span>
-        <span className="text-xl tabular-nums">
-          {decouplingText(activity, range, driftChannel)}
-        </span>
+      <p className="mb-1 text-[10px] uppercase tracking-widest text-ink-muted">Decoupling</p>
+      <div className="mb-3 grid grid-cols-2 gap-2">
+        {(['speed', 'power'] as const).map((drift) => (
+          <div
+            key={drift}
+            className="flex items-baseline justify-between rounded border border-line bg-surface px-3 py-2"
+          >
+            <span className="text-[10px] uppercase tracking-widest text-ink-muted">
+              {drift === 'speed' ? 'Pa:HR' : 'Pw:HR'}
+            </span>
+            <span className="text-lg tabular-nums">{decouplingText(activity, range, drift)}</span>
+          </div>
+        ))}
       </div>
       <table className="w-full">
         <thead>

@@ -1,7 +1,14 @@
-import type { Activity, ChannelKind, DriftChannel } from '../domain/model/types'
+import type { Activity, ChannelKind } from '../domain/model/types'
 import { formatPace } from './format'
 
-export type DisplayChannel = 'heartRate' | 'pace' | 'power' | 'cadence' | 'altitude'
+export type DisplayChannel =
+  | 'heartRate'
+  | 'pace'
+  | 'power'
+  | 'cadence'
+  | 'altitude'
+  | 'efPace'
+  | 'efPower'
 
 export interface ChannelMeta {
   key: DisplayChannel
@@ -55,11 +62,42 @@ export const CHANNELS: ChannelMeta[] = [
   },
 ]
 
-/** The DriftChannel selector (speed|power) maps to these display channels' sources. */
-export function driftChannelLabel(c: DriftChannel): string {
-  return c === 'speed' ? 'Pace (Pa:HR)' : 'Power (Pw:HR)'
-}
-
 export function channelsPresent(a: Activity): ChannelMeta[] {
   return CHANNELS.filter((c) => a.channels[c.sourceChannel] !== undefined)
+}
+
+/** Efficiency curves (output/HR over time) — derived, not raw channels. */
+export interface EfficiencyMeta {
+  key: 'efPace' | 'efPower'
+  label: string
+  colorHex: string
+  /** the output channel divided by HR */
+  requires: ChannelKind
+  /** unit scale: pace 60 (m/min per bpm), power 1 (W per bpm) */
+  scale: number
+  format(v: number): string
+}
+
+export const EFFICIENCY: EfficiencyMeta[] = [
+  {
+    key: 'efPace',
+    label: 'Pa:HR eff',
+    colorHex: '#2dd4bf',
+    requires: 'speed',
+    scale: 60,
+    format: (v) => v.toFixed(2),
+  },
+  {
+    key: 'efPower',
+    label: 'Pw:HR eff',
+    colorHex: '#c084fc',
+    requires: 'power',
+    scale: 1,
+    format: (v) => v.toFixed(2),
+  },
+]
+
+export function efficiencyPresent(a: Activity): EfficiencyMeta[] {
+  if (!a.channels.heartRate) return []
+  return EFFICIENCY.filter((e) => a.channels[e.requires] !== undefined)
 }
