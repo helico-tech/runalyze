@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { uncoveredS } from '../../domain/analysis/stats'
 import type { Series } from '../../domain/model/types'
 import { fixtureBytes } from '../testing/fixtures'
 import { decodeFitActivity, FitDecodeError } from './decode-fit'
@@ -62,6 +63,27 @@ describe('decodeFitActivity', () => {
     expect(a.device).toBe('fr955')
     expect(a.channels.temperature!.t.length).toBe(310)
     expect(plainMean(a.channels.temperature!)).toBeCloseTo(26.3065, 3)
+  })
+
+  it('decodes the long steady user run (manifest values)', () => {
+    const a = decodeFitActivity(fixtureBytes('user-long-run-2025-04-26.fit'), 'id-7')
+    expect(a.sport).toBe('running')
+    expect(a.durationS).toBeCloseTo(10644.774, 2)
+    expect(a.channels.heartRate!.t.length).toBe(10637)
+    expect(plainMean(a.channels.heartRate!)).toBeCloseTo(165.6215, 3)
+    expect(plainMean(a.channels.power!)).toBeCloseTo(301.2128, 3)
+    expect(plainMean(a.channels.speed!)).toBeCloseTo(2.8149, 3)
+  })
+
+  it('preserves real recording gaps for the gap-aware stats (manifest values)', () => {
+    const a = decodeFitActivity(fixtureBytes('user-gap-run-2026-07-02.fit'), 'id-8')
+    expect(a.durationS).toBeCloseTo(2329.527, 2)
+    const hr = a.channels.heartRate!
+    expect(hr.t.length).toBe(2188)
+    expect(plainMean(hr)).toBeCloseTo(143.787, 3)
+    // manifest: one real 133 s recording gap, uncovered computed independently per §2.5
+    expect(uncoveredS(hr, { startS: 0, endS: a.durationS })).toBeCloseTo(133, 3)
+    expect(uncoveredS(a.channels.speed!, { startS: 0, endS: a.durationS })).toBeCloseTo(133, 3)
   })
 
   it('rejects a truncated FIT file', () => {

@@ -46,6 +46,25 @@ noted.
   - Pw:HR — halves 210.2950/154.6639 and 216.7206/163.3567 → **decoupling 2.4284 %**
   - window [0, 3600) plain avg HR: **159.0103** (n=3600)
 
+## user-long-run-2025-04-26.fit (user's FR255 + Stryd; PERSONAL DATA — private repo only)
+
+- records: 10637, startTime 2025-04-26T07:08:42.000Z, session elapsed 10644.774 s
+- sport running, device fr255, totalDistance 30016.3 m — long steady run, no gaps (maxDt 10 s)
+- no native power — developer-field (Stryd) power
+- channels (n / avg): heartRate 10637 / 165.6215 · speed 10637 / 2.8149
+  · power 10637 / 301.2128
+
+## user-gap-run-2026-07-02.fit (user's FR255 + Stryd; PERSONAL DATA — private repo only)
+
+- records: 2199, startTime 2026-07-02T17:26:32.000Z, session elapsed 2329.527 s
+  (timer 2196.401 — recording was paused)
+- sport running, device fr255, totalDistance 5011.08 m
+- **one real recording gap: maxDt 133 s** — the real-data fixture for gap-aware stats
+- channels (n / avg): heartRate 2188 / 143.787 (11 records lack HR) · speed 2199 / 2.2725
+  · power 2199 / 193.6717
+- uncovered time over [0, 2329.527) per spec §2.5 rule (computed independently):
+  **exactly 133.000 s** for both heartRate and speed channels
+
 ## activities.zip
 
 - zip of Activity.fit + WithGearChangeData.fit (entries keep those names)
