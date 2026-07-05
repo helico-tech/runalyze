@@ -1,7 +1,12 @@
+import { useState } from 'react'
 import type { AdsStatus } from '../../../domain/analysis/ads-assessment'
 import { ADS_GAP_THRESHOLD_PCT } from '../../../domain/analysis/protocol-constants'
+import type { ImageRenderer } from '../../../domain/ports/image-renderer'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ExportPreview } from '../../export/export-preview'
+import { AdsExportCard } from '../../export/export-card'
 import { formatDate } from '../../format'
 
 const METER_MAX_PCT = 20
@@ -60,11 +65,25 @@ function Provenance({
   )
 }
 
-export function AdsCard({ status, now }: { status: AdsStatus; now: Date }) {
+export function AdsCard({
+  status,
+  now,
+  renderer,
+}: {
+  status: AdsStatus
+  now: Date
+  renderer?: ImageRenderer
+}) {
+  const [showExport, setShowExport] = useState(false)
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="flex-row items-center justify-between">
         <CardTitle>ADS readout</CardTitle>
+        {status.state === 'assessed' && renderer && (
+          <Button variant="outline" size="sm" onClick={() => setShowExport(true)}>
+            Export
+          </Button>
+        )}
       </CardHeader>
       <CardContent>
         {status.state === 'assessed' ? (
@@ -101,6 +120,16 @@ export function AdsCard({ status, now }: { status: AdsStatus; now: Date }) {
           </>
         )}
       </CardContent>
+
+      {showExport && renderer && status.state === 'assessed' && (
+        <ExportPreview
+          filename="runalyze-ads.png"
+          renderer={renderer}
+          onClose={() => setShowExport(false)}
+        >
+          <AdsExportCard status={status} />
+        </ExportPreview>
+      )}
     </Card>
   )
 }

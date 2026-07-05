@@ -10,10 +10,13 @@ import {
   type AntEvaluation,
 } from '../../../domain/analysis/ant-protocol'
 import type { Activity, DriftChannel, TestResult, TimeRange } from '../../../domain/model/types'
+import type { ImageRenderer } from '../../../domain/ports/image-renderer'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { formatBpm, formatDuration } from '../../format'
+import { formatBpm, formatDate, formatDuration } from '../../format'
+import { ExportPreview } from '../../export/export-preview'
+import { TestExportCard } from '../../export/export-card'
 import type { TestKind } from './test-window'
 
 const AET_GUIDANCE: Record<string, string> = {
@@ -39,6 +42,7 @@ export function TestPanel({
   driftChannel,
   onSave,
   onCancel,
+  renderer,
 }: {
   activity: Activity
   kind: TestKind
@@ -46,8 +50,10 @@ export function TestPanel({
   driftChannel: DriftChannel
   onSave: (r: TestResult) => void
   onCancel: () => void
+  renderer?: ImageRenderer
 }) {
   const [accept, setAccept] = useState(false)
+  const [showExport, setShowExport] = useState(false)
   let evaluation: AetEvaluation | AntEvaluation | null = null
   let error: string | null = null
   try {
@@ -59,13 +65,11 @@ export function TestPanel({
     error = e instanceof Error ? e.message : String(e)
   }
 
-  const save = () => {
-    if (!evaluation) return
+  const buildResult = (): TestResult => {
     const id = crypto.randomUUID()
     const createdAt = new Date()
-    if (kind === 'aet') {
-      onSave(
-        buildAetResult({
+    return kind === 'aet'
+      ? buildAetResult({
           id,
           activity,
           window,
@@ -73,19 +77,13 @@ export function TestPanel({
           evaluation: evaluation as AetEvaluation,
           createdAt,
           acceptAetHr: accept,
-        }),
-      )
-    } else {
-      onSave(
-        buildAntResult({
-          id,
-          activity,
-          window,
-          evaluation: evaluation as AntEvaluation,
-          createdAt,
-        }),
-      )
-    }
+        })
+      : buildAntResult({ id, activity, window, evaluation: evaluation as AntEvaluation, createdAt })
+  }
+
+  const save = () => {
+    if (!evaluation) return
+    onSave(buildResult())
   }
 
   const aet = kind === 'aet' && evaluation ? (evaluation as AetEvaluation) : null
@@ -136,10 +134,25 @@ export function TestPanel({
         <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
         </Button>
+        {renderer && evaluation && evaluation.valid && (
+          <Button variant="outline" size="sm" onClick={() => setShowExport(true)}>
+            Export
+          </Button>
+        )}
         <Button size="sm" disabled={!evaluation || !evaluation.valid} onClick={save}>
           Save result
         </Button>
       </div>
+
+      {showExport && renderer && evaluation && (
+        <ExportPreview
+          filename={`runalyze-${kind}-${formatDate(activity.startTime)}.png`}
+          renderer={renderer}
+          onClose={() => setShowExport(false)}
+        >
+          <TestExportCard activity={activity} result={buildResult()} />
+        </ExportPreview>
+      )}
     </div>
   )
 }
