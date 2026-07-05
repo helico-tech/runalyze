@@ -45,6 +45,7 @@ noted.
   - Pa:HR — halves 2.4829/154.6639 and 2.5291/163.3567 → **decoupling 3.5606 %**
   - Pw:HR — halves 210.2950/154.6639 and 216.7206/163.3567 → **decoupling 2.4284 %**
   - window [0, 3600) plain avg HR: **159.0103** (n=3600)
+- laps: 7 auto (time) + 1 sessionEnd — **0 manual laps**
 
 ## user-long-run-2025-04-26.fit (user's FR255 + Stryd; PERSONAL DATA — private repo only)
 
@@ -53,6 +54,7 @@ noted.
 - no native power — developer-field (Stryd) power
 - channels (n / avg): heartRate 10637 / 165.6215 · speed 10637 / 2.8149
   · power 10637 / 301.2128
+- laps: 3 **manual** (button-press) — [0, 7511.275], [7511.000, 9911.000], [9911.000, 10511.002] — plus a sessionEnd tail
 
 ## user-gap-run-2026-07-02.fit (user's FR255 + Stryd; PERSONAL DATA — private repo only)
 
@@ -64,6 +66,7 @@ noted.
   · power 2199 / 193.6717
 - uncovered time over [0, 2329.527) per spec §2.5 rule (computed independently):
   **exactly 133.000 s** for both heartRate and speed channels
+- laps: 4 auto (time) + 1 sessionEnd — **0 manual laps**
 
 ## activities.zip
 

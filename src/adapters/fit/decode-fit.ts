@@ -1,6 +1,6 @@
 import { Decoder, Stream } from '@garmin/fitsdk'
 import { defaultExclusions, makeSeries } from '../../domain/model/series'
-import type { Activity, ChannelKind, Series } from '../../domain/model/types'
+import type { Activity, ChannelKind, Lap, LapTrigger, Series } from '../../domain/model/types'
 
 export class FitDecodeError extends Error {}
 
@@ -28,6 +28,7 @@ interface FitMessages {
   sportMesgs?: Array<{ sport?: string }>
   fileIdMesgs?: Array<{ garminProduct?: string | number; manufacturer?: string | number }>
   fieldDescriptionMesgs?: Array<{ fieldName?: string; units?: string; key?: number }>
+  lapMesgs?: Array<{ startTime?: Date; totalElapsedTime?: number; lapTrigger?: string }>
 }
 
 export function decodeFitActivity(bytes: Uint8Array, id: string): Activity {
@@ -98,6 +99,17 @@ export function decodeFitActivity(bytes: Uint8Array, id: string): Activity {
   }
 
   const durationS = session?.totalElapsedTime ?? lastT
+
+  const laps: Lap[] = (messages.lapMesgs ?? [])
+    .filter((l) => l.startTime)
+    .map((l, index): Lap => {
+      const startS = Math.max(0, (l.startTime!.getTime() - startTime.getTime()) / 1000)
+      const endS = Math.min(durationS, startS + (l.totalElapsedTime ?? 0))
+      const trigger: LapTrigger =
+        l.lapTrigger === 'manual' ? 'manual' : l.lapTrigger === 'sessionEnd' ? 'session-end' : 'auto'
+      return { index, range: { startS, endS }, trigger }
+    })
+
   const fileId = messages.fileIdMesgs?.[0]
   return {
     id,
@@ -112,5 +124,6 @@ export function decodeFitActivity(bytes: Uint8Array, id: string): Activity {
           : null,
     channels,
     exclusions: defaultExclusions(durationS),
+    laps,
   }
 }
