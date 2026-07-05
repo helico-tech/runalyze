@@ -59,4 +59,19 @@ describe('ActivityScreen workspace', () => {
     renderAt({ repo, parser }, 'nonexistent')
     expect(await screen.findByText(/run not found/i)).toBeInTheDocument()
   })
+
+  it('runs and saves an AeT test that lands in the repository', async () => {
+    const repo = new InMemoryLibraryRepository()
+    const parser = new GarminFitFileParser()
+    const [outcome] = await parser.parse(
+      fixtureBytes('user-run-2026-07-05.fit'),
+      'user-run-2026-07-05.fit',
+    )
+    if (!outcome!.ok) throw new Error('parse failed')
+    await repo.saveActivity(outcome!.activity, outcome!.rawBytes)
+    renderAt({ repo, parser }, outcome!.activity.id)
+    await userEvent.click(await screen.findByRole('button', { name: /aet test/i }))
+    await userEvent.click(await screen.findByRole('button', { name: /save result/i }))
+    await waitFor(async () => expect(await repo.listTestResults()).toHaveLength(1))
+  })
 })

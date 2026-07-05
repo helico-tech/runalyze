@@ -22,7 +22,9 @@ export function useWorkspacePersistence(
     prevExclusions.current = s.exclusions
 
     const flush = () => {
-      const { sectors, exclusions } = store.getState()
+      const { exclusions } = store.getState()
+      // Never persist the transient test window; it is not a saved sector.
+      const sectors = store.getState().sectors.filter((sec) => sec.kind !== 'test-window')
       const now = new Map(sectors.map((sec) => [sec.id, sec]))
       for (const sec of sectors) {
         const prev = prevSectors.current.get(sec.id)
