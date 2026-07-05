@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import type { Exclusions, Sector } from '../../../domain/model/types'
-import { applyDrag, createSector, hitTest, pxToleranceS } from './chart-geometry'
+import { applyDrag, createSector, cursorForTarget, hitTest, pxToleranceS } from './chart-geometry'
+
+describe('cursorForTarget', () => {
+  it('maps targets to cursor styles', () => {
+    expect(cursorForTarget({ kind: 'resize-start', id: 's1' }, false)).toBe('ew-resize')
+    expect(cursorForTarget({ kind: 'trim-warmup' }, false)).toBe('ew-resize')
+    expect(cursorForTarget({ kind: 'move-sector', id: 's1' }, false)).toBe('grab')
+    expect(cursorForTarget({ kind: 'move-sector', id: 's1' }, true)).toBe('grabbing')
+    expect(cursorForTarget({ kind: 'create' }, false)).toBe('crosshair')
+  })
+})
 
 const ex: Exclusions = { warmupEndS: 300, cooldownStartS: 3300 }
 const sectors: Sector[] = [
