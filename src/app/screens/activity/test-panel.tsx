@@ -66,7 +66,9 @@ export function TestPanel({
   }
 
   const buildResult = (): TestResult => {
-    const id = crypto.randomUUID()
+    // Deterministic id: one result per (activity, kind). Re-saving overwrites, so an
+    // activity can never hold two of the same test.
+    const id = `${activity.id}-${kind}`
     const createdAt = new Date()
     return kind === 'aet'
       ? buildAetResult({
