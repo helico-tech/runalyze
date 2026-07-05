@@ -88,4 +88,15 @@ describe('workspace store test mode', () => {
     expect(windows).toHaveLength(1)
     expect(store.getState().activeTest).toBe('ant')
   })
+
+  it('sets and clears the hover time without touching sectors', () => {
+    const store = createWorkspaceStore()
+    store.getState().init(activity(), [sector])
+    const sectorsRef = store.getState().sectors
+    store.getState().setHoverT(42)
+    expect(store.getState().hoverT).toBe(42)
+    expect(store.getState().sectors).toBe(sectorsRef)
+    store.getState().setHoverT(null)
+    expect(store.getState().hoverT).toBeNull()
+  })
 })

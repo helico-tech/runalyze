@@ -16,6 +16,7 @@ export interface WorkspaceState {
   exclusions: Exclusions
   selectedSectorId: string | null
   activeTest: TestKind | null
+  hoverT: number | null
   init(activity: Activity, sectors: Sector[]): void
   toggleChannel(c: DisplayChannel): void
   setDriftChannel(c: DriftChannel): void
@@ -25,6 +26,7 @@ export interface WorkspaceState {
   removeSector(id: string): void
   startTest(kind: TestKind, range: TimeRange, activityId: string): void
   cancelTest(): void
+  setHoverT(t: number | null): void
 }
 
 export type WorkspaceStore = ReturnType<typeof createWorkspaceStore>
@@ -37,6 +39,7 @@ export function createWorkspaceStore() {
     exclusions: { warmupEndS: 0, cooldownStartS: 0 },
     selectedSectorId: null,
     activeTest: null,
+    hoverT: null,
     init: (activity, sectors) =>
       set({
         visible: new Set(channelsPresent(activity).map((c) => c.key)),
@@ -45,6 +48,7 @@ export function createWorkspaceStore() {
         exclusions: activity.exclusions,
         selectedSectorId: null,
         activeTest: null,
+        hoverT: null,
       }),
     toggleChannel: (c) =>
       set((s) => {
@@ -77,6 +81,7 @@ export function createWorkspaceStore() {
         sectors: s.sectors.filter((x) => x.id !== TEST_WINDOW_ID),
         selectedSectorId: s.selectedSectorId === TEST_WINDOW_ID ? null : s.selectedSectorId,
       })),
+    setHoverT: (hoverT) => set({ hoverT }),
   }))
 }
 
