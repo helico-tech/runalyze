@@ -280,8 +280,8 @@ conditions or carries a visible caveat.
 TDD throughout, inside-out:
 
 - **Domain (Vitest, pure)** — bulk of the suite. Decoupling math against analytically
-  constructed series with known answers (e.g., HR exactly +5% in second half at constant
-  pace ⇒ decoupling 5.0 ± ε). Verdict bands at boundaries (3.49/3.5/5.0/5.01). Weighted
+  constructed series with known answers (e.g., constant pace with second-half HR raised by
+  factor 1/0.95 ⇒ decoupling exactly 5.0; note HR "+5%" gives 1 − 1/1.05 ≈ 4.76, not 5.0). Verdict bands at boundaries (3.49/3.5/5.0/5.01). Weighted
   averaging with deliberate gaps and dropouts. Window suggestion on synthetic profiles.
   ADS with zero/one/two tests and staleness.
 - **Adapters** — FIT parser against real fixtures (user's runs: one long steady run, one
