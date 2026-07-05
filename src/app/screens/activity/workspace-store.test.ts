@@ -30,6 +30,8 @@ describe('workspace store', () => {
     const s = store.getState()
     expect([...s.visible]).toContain('heartRate')
     expect([...s.visible]).toContain('pace')
+    expect([...s.visible]).toContain('efPace') // efficiency curves default-visible
+    expect([...s.visible]).toContain('efPower')
     expect(s.exclusions).toEqual({ warmupEndS: 120, cooldownStartS: 3600 })
     expect(s.sectors).toHaveLength(1)
   })

@@ -1,6 +1,6 @@
 import { createStore, useStore as useZustandStore } from 'zustand'
 import type { Activity, Exclusions, Sector, TimeRange } from '../../../domain/model/types'
-import { channelsPresent, type DisplayChannel } from '../../channels'
+import { channelsPresent, efficiencyPresent, type DisplayChannel } from '../../channels'
 import { TEST_WINDOW_ID, testWindowSector, type TestKind } from './test-window'
 
 export interface WorkspaceState {
@@ -33,7 +33,10 @@ export function createWorkspaceStore() {
     hoverT: null,
     init: (activity, sectors) =>
       set({
-        visible: new Set(channelsPresent(activity).map((c) => c.key)),
+        visible: new Set<DisplayChannel>([
+          ...channelsPresent(activity).map((c) => c.key),
+          ...efficiencyPresent(activity).map((e) => e.key),
+        ]),
         sectors,
         exclusions: activity.exclusions,
         selectedSectorId: null,

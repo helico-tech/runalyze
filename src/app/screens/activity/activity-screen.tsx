@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import { useStore as useZustand } from 'zustand'
 import type { Activity, TestResult } from '../../../domain/model/types'
 import type { LibraryRepository } from '../../../domain/ports/library-repository'
-import { channelsPresent } from '../../channels'
+import { channelsPresent, efficiencyPresent } from '../../channels'
 import { ConfirmButton } from '../../components/confirm-button'
 import { useContainer } from '../../container-context'
 import { useTestResults } from '../../hooks'
@@ -85,6 +85,7 @@ function Workspace({
   const selectedSectorId = useZustand(store, (s) => s.selectedSectorId)
   const activeTest = useZustand(store, (s) => s.activeTest)
   const present = useMemo(() => channelsPresent(activity), [activity])
+  const effPresent = useMemo(() => efficiencyPresent(activity), [activity])
   const testWindow = sectors.find((s) => s.id === TEST_WINDOW_ID)?.range ?? null
   const userSectors = sectors.filter((s) => s.id !== TEST_WINDOW_ID)
   const suggestions = useMemo(
@@ -143,6 +144,20 @@ function Workspace({
             style={visible.has(c.key) ? { color: c.colorHex } : undefined}
           >
             {c.label}
+          </button>
+        ))}
+        {effPresent.map((e) => (
+          <button
+            key={e.key}
+            type="button"
+            onClick={() => store.getState().toggleChannel(e.key)}
+            className={cn(
+              'rounded border px-2 py-1 font-mono text-xs',
+              visible.has(e.key) ? 'border-line bg-surface-2' : 'border-line/50 text-ink-muted',
+            )}
+            style={visible.has(e.key) ? { color: e.colorHex } : undefined}
+          >
+            {e.label}
           </button>
         ))}
       </div>
