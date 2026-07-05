@@ -1,4 +1,11 @@
-import type { Activity, AetTestResult, AetVerdict, DriftChannel, TimeRange } from '../model/types'
+import type {
+  Activity,
+  AetChannelResult,
+  AetTestResult,
+  AetVerdict,
+  Series,
+  TimeRange,
+} from '../model/types'
 import { overlapsExclusion, rangeLengthS } from '../model/series'
 import { computeDecoupling, type DecouplingResult } from './decoupling'
 import {
@@ -11,12 +18,21 @@ import { windowStats } from './stats'
 
 export type AetWarning = 'window-too-short' | 'overlaps-exclusion' | 'gaps-in-window'
 
-export interface AetEvaluation {
+export interface AetChannelEval {
   decoupling: DecouplingResult
-  windowAvgHr: number
   verdict: AetVerdict
+}
+
+export interface AetEvaluation {
+  /** Pa:HR (speed drift), null when speed is absent or a window half has no data */
+  pace: AetChannelEval | null
+  /** Pw:HR (power drift), null when power is absent or a window half has no data */
+  power: AetChannelEval | null
+  windowAvgHr: number
   warnings: AetWarning[]
   valid: boolean
+  /** either channel reads at-aet */
+  atAet: boolean
   suggestedAetHr: number | null
 }
 
@@ -26,32 +42,48 @@ export function aetVerdict(decouplingPct: number): AetVerdict {
   return 'below-aet'
 }
 
-export function evaluateAetTest(
-  activity: Activity,
-  window: TimeRange,
-  driftChannel: DriftChannel,
-): AetEvaluation {
-  const output = activity.channels[driftChannel]
-  if (!output) throw new Error(`missing channel: ${driftChannel}`)
+/** Decoupling + verdict for one drift channel; null if absent or a half has no data. */
+function channelEval(output: Series | undefined, hr: Series, window: TimeRange): AetChannelEval | null {
+  if (!output) return null
+  try {
+    const decoupling = computeDecoupling(output, hr, window)
+    return { decoupling, verdict: aetVerdict(decoupling.decouplingPct) }
+  } catch {
+    // a present-but-sparse channel whose window half has no usable data
+    return null
+  }
+}
+
+export function evaluateAetTest(activity: Activity, window: TimeRange): AetEvaluation {
   const hr = activity.channels.heartRate
   if (!hr) throw new Error('missing channel: heartRate')
+  if (!activity.channels.speed && !activity.channels.power) {
+    throw new Error('no drift channel: needs speed or power')
+  }
 
-  const decoupling = computeDecoupling(output, hr, window)
+  const pace = channelEval(activity.channels.speed, hr, window)
+  const power = channelEval(activity.channels.power, hr, window)
   const windowAvgHr = windowStats(hr, window).mean
-  const verdict = aetVerdict(decoupling.decouplingPct)
+
+  const uncovered = [pace, power]
+    .filter((c): c is AetChannelEval => c !== null)
+    .map((c) => c.decoupling.uncoveredS)
+  const worstUncovered = uncovered.length > 0 ? Math.max(...uncovered) : 0
 
   const warnings: AetWarning[] = []
   if (rangeLengthS(window) < AET_MIN_WINDOW_S) warnings.push('window-too-short')
   if (overlapsExclusion(activity, window)) warnings.push('overlaps-exclusion')
-  if (decoupling.uncoveredS > MAX_GAP_IN_WINDOW_S) warnings.push('gaps-in-window')
+  if (worstUncovered > MAX_GAP_IN_WINDOW_S) warnings.push('gaps-in-window')
 
+  const atAet = pace?.verdict === 'at-aet' || power?.verdict === 'at-aet'
   return {
-    decoupling,
+    pace,
+    power,
     windowAvgHr,
-    verdict,
     warnings,
     valid: !warnings.includes('window-too-short') && !warnings.includes('overlaps-exclusion'),
-    suggestedAetHr: verdict === 'at-aet' ? Math.round(windowAvgHr) : null,
+    atAet,
+    suggestedAetHr: atAet ? Math.round(windowAvgHr) : null,
   }
 }
 
@@ -59,12 +91,14 @@ export interface BuildAetArgs {
   id: string
   activity: Activity
   window: TimeRange
-  driftChannel: DriftChannel
   evaluation: AetEvaluation
   createdAt: Date
-  /** user explicitly accepts windowAvgHr as AeT despite a non-at-aet verdict */
+  /** user explicitly accepts windowAvgHr as AeT despite no channel reading at-aet */
   acceptAetHr?: boolean
 }
+
+const channelResult = (c: AetChannelEval | null): AetChannelResult | null =>
+  c ? { decouplingPct: c.decoupling.decouplingPct, verdict: c.verdict } : null
 
 export function buildAetResult(args: BuildAetArgs): AetTestResult {
   const { evaluation } = args
@@ -76,11 +110,11 @@ export function buildAetResult(args: BuildAetArgs): AetTestResult {
     testDate: args.activity.startTime,
     createdAt: args.createdAt,
     window: args.window,
-    driftChannel: args.driftChannel,
-    decouplingPct: evaluation.decoupling.decouplingPct,
+    pace: channelResult(evaluation.pace),
+    power: channelResult(evaluation.power),
     windowAvgHr: evaluation.windowAvgHr,
-    verdict: evaluation.verdict,
     aetHr:
-      evaluation.suggestedAetHr ?? (args.acceptAetHr ? Math.round(evaluation.windowAvgHr) : null),
+      evaluation.suggestedAetHr ??
+      (args.acceptAetHr ? Math.round(evaluation.windowAvgHr) : null),
   }
 }

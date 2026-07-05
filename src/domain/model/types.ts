@@ -47,6 +47,11 @@ export type DriftChannel = 'speed' | 'power'
 
 export type AetVerdict = 'above-aet' | 'at-aet' | 'below-aet'
 
+export interface AetChannelResult {
+  decouplingPct: number
+  verdict: AetVerdict
+}
+
 export interface AetTestResult {
   kind: 'aet'
   id: string
@@ -54,11 +59,12 @@ export interface AetTestResult {
   testDate: Date
   createdAt: Date
   window: TimeRange
-  driftChannel: DriftChannel
-  decouplingPct: number
+  /** Pa:HR (speed drift) — null when speed is absent or unusable */
+  pace: AetChannelResult | null
+  /** Pw:HR (power drift) — null when power is absent or unusable */
+  power: AetChannelResult | null
   windowAvgHr: number
-  verdict: AetVerdict
-  /** set when verdict is at-aet, or when the user explicitly accepted; integer bpm */
+  /** window avg HR, set when either channel is at-aet (or the user accepted); integer bpm */
   aetHr: number | null
 }
 
