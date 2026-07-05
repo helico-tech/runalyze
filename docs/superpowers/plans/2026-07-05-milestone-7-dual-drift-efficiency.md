@@ -12,6 +12,12 @@
 
 "Store both verdicts": save both Pa:HR and Pw:HR decoupling + verdicts; the AeT HR (window avg HR) is accepted whenever EITHER channel reads at-AeT.
 
+## Review amendments (apply during execution — supersede the task bodies below)
+
+1. **integration.test.ts (Task 2/3, blocker):** `src/adapters/integration.test.ts` calls the old `evaluateAetTest(loaded, WINDOW, 'speed')` and asserts `evaluation.verdict`. Update it: `evaluateAetTest(loaded, WINDOW)`; assert `evaluation.pace!.verdict === 'at-aet'`, `evaluation.power!.verdict === 'below-aet'` (power present at 2.43%), `evaluation.atAet === true`; keep the `valid`/`windowAvgHr`/`suggestedAetHr === 159` assertions.
+2. **Unused DriftChannel/driftChannelLabel imports (minor, TS6133):** in Task 2 drop `DriftChannel` from `aet-protocol.ts`'s type import (evaluate + BuildAetArgs no longer use it); in Task 4 drop `DriftChannel` from `channels.ts` when removing `driftChannelLabel`, and drop `driftChannelLabel` from `activity-screen.tsx`'s `../../channels` import. The `DriftChannel` declaration stays exported in `types.ts`.
+3. **Defensive per-channel evaluate (Task 2, runtime):** compute each channel's `AetChannelEval` inside a try/catch — a present-but-sparse channel whose window half has no data makes `computeDecoupling` throw; treat a throwing channel as `null` rather than aborting the whole evaluation. Compute the `gaps-in-window` warning as the worst `uncoveredS` across the channels that actually produced a result (`Math.max(...)` guarded for the empty case). A null/failed channel never crashes the evaluation; a surviving channel still drives validity and warnings. Downstream (buildAetResult, test-panel, export-card, testKeyValue) must render "—" for a null channel.
+
 ## Global Constraints
 
 - All prior Global Constraints apply (strict TS, domain purity grep, TDD, commit style, `@/` alias, jsdom docblock, `TZ: 'UTC'`, no uPlot in vitest).
