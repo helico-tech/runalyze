@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { GarminFitFileParser } from '../../../adapters/fit/fit-file-parser'
 import { InMemoryLibraryRepository } from '../../../adapters/storage/in-memory-library-repository'
 import { fixtureBytes } from '../../../adapters/testing/fixtures'
+import { FakeImageRenderer } from '../../../adapters/export/fake-image-renderer'
 import { App } from '../../../App'
 import { ContainerProvider } from '../../container-context'
 import { LibraryScreen } from './library-screen'
@@ -17,6 +18,7 @@ function makeContainer(persistent = true) {
   return {
     parser: new GarminFitFileParser(),
     repo: new InMemoryLibraryRepository(),
+    renderer: new FakeImageRenderer(),
     persistent,
   }
 }
@@ -48,6 +50,24 @@ describe('LibraryScreen', () => {
     await userEvent.upload(input as HTMLInputElement, file)
     await waitFor(() => expect(screen.getByText('2021-07-20')).toBeInTheDocument())
     expect(screen.getByText('1:00:01')).toBeInTheDocument() // durationS 3601
+  })
+
+  it('deletes a run after confirmation', async () => {
+    const container = makeContainer(true)
+    const [outcome] = await container.parser.parse(fixtureBytes('Activity.fit'), 'Activity.fit')
+    if (!outcome!.ok) throw new Error('parse failed')
+    await container.repo.saveActivity(outcome!.activity, outcome!.rawBytes)
+    render(
+      <MemoryRouter>
+        <ContainerProvider container={container}>
+          <LibraryScreen />
+        </ContainerProvider>
+      </MemoryRouter>,
+    )
+    await screen.findByText('2021-07-20')
+    await userEvent.click(screen.getByRole('button', { name: /delete run/i }))
+    await userEvent.click(screen.getByRole('button', { name: /confirm delete/i }))
+    await waitFor(async () => expect(await container.repo.listActivities()).toHaveLength(0))
   })
 })
 

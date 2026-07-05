@@ -74,6 +74,7 @@ function Workspace({
   initialNote: string
   repo: LibraryRepository
 }) {
+  const { renderer } = useContainer()
   const visible = useZustand(store, (s) => s.visible)
   const driftChannel = useZustand(store, (s) => s.driftChannel)
   const sectors = useZustand(store, (s) => s.sectors)
@@ -211,6 +212,7 @@ function Workspace({
               driftChannel={driftChannel}
               onSave={handleSaveResult}
               onCancel={() => store.getState().cancelTest()}
+              renderer={renderer}
             />
           ) : (
             <StatsPanel

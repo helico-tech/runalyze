@@ -48,13 +48,13 @@
 - `fake-image-renderer.ts`: `class FakeImageRenderer implements ImageRenderer` — returns a tiny fixed PNG blob; records the last node. Used in component tests and as the node-env fallback.
 - `Container` gains `renderer: ImageRenderer`. `createContainer` uses `HtmlImageRenderer` in the browser; when `document` is unavailable (node tests) it uses `FakeImageRenderer`.
 
-- [ ] **Step 1: Install html-to-image**
+- [x] **Step 1: Install html-to-image**
 
 ```bash
 npm install html-to-image
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Append to `src/app/container.test.ts`:
 
@@ -69,7 +69,7 @@ it('provides a renderer', async () => {
 })
 ```
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/domain/ports/image-renderer.ts`:
 
@@ -120,7 +120,7 @@ export class FakeImageRenderer implements ImageRenderer {
 
 In `container.ts`: add `renderer: ImageRenderer` to `Container`; import both adapters; set `const renderer = typeof document === 'undefined' ? new FakeImageRenderer() : new HtmlImageRenderer()` and include it in both the persistent and fallback return objects.
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(export): ImageRenderer port, html-to-image adapter, fake renderer, container wiring"
@@ -139,7 +139,7 @@ git add -A && git commit -m "feat(export): ImageRenderer port, html-to-image ada
 - `AdsExportCard({ status })` — the ADS readout rendered for export (gap %, verdict, the threshold meter, provenance), reusing the visual language of the library `AdsCard`.
 - Both render at the fixed export size with `data-export-card` on the root.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/app/export/export-card.test.tsx`:
 
@@ -202,15 +202,15 @@ describe('AdsExportCard', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing module.
+- [x] **Step 2: Run to verify fail** — missing module.
 
-- [ ] **Step 3: Implement** `src/app/export/export-card.tsx`
+- [x] **Step 3: Implement** `src/app/export/export-card.tsx`
 
 Build both components with the theme's literal hex colors (inline styles, since html-to-image rasterizes computed styles; Tailwind classes also work but inline hex is safest for export fidelity). The mini chart: take the drift channel and HR series clipped to `result.window`, sample to ~120 points, `scalePoints` into a small box, draw two `polyline`s (HR in `#ff6b6b`, drift in `#4cc9f0`), shade the first/second halves with translucent rects, draw the midpoint line. Header: `BRAND` + `formatDate(result.testDate)`. Body: for AeT, `${decouplingPct.toFixed(1)}%` + verdict label + `AeT HR ${aetHr} bpm`; for AnT, `${antHr} bpm` + "AnT HR". Use `formatBpm`/`formatDate`. Root `<div data-export-card style={{ width: EXPORT_W, height: EXPORT_H, background: '#0b0e14', color: '#e6ebf0' }}>`. (The card is rendered into an off-screen container by the preview in Task 3 — it does not need to fit the viewport.)
 
 `AdsExportCard` mirrors the library `AdsCard` visual (gap %, verdict badge, threshold meter, provenance) at export size with inline hex.
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(export): branded AeT/AnT and ADS export cards with mini window chart"
@@ -231,7 +231,7 @@ git add -A && git commit -m "feat(export): branded AeT/AnT and ADS export cards 
 - The library `AdsCard` gains an "Export" button when `status.state === 'assessed'` that opens an `ExportPreview` wrapping `<AdsExportCard status={status} />`.
 - The `renderer` comes from `useContainer().renderer`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/app/export/export-preview.test.tsx`:
 
@@ -272,9 +272,9 @@ describe('ExportPreview', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing modules.
+- [x] **Step 2: Run to verify fail** — missing modules.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `download.ts`:
 
@@ -351,7 +351,7 @@ export function ExportPreview({
 
 Wire the Export buttons: in `TestPanel`, add an "Export" `Button` (in the footer row) that sets local `showExport` state; when true, build `previewResult` from the current evaluation and render `<ExportPreview filename={...} renderer={renderer} onClose={() => setShowExport(false)}><TestExportCard activity={activity} result={previewResult} /></ExportPreview>`. Pass `renderer` into `TestPanel` as a prop from `Workspace` (`useContainer().renderer`). In `ads-card.tsx`, add an "Export" button when assessed that opens the preview with `<AdsExportCard status={status} />`; `AdsCard` takes a `renderer` prop from `LibraryScreen`.
 
-- [ ] **Step 4: Full gate; commit**
+- [x] **Step 4: Full gate; commit**
 
 Run: `npm test && npm run lint && npm run build`. Purity grep clean.
 
@@ -372,7 +372,7 @@ git add -A && git commit -m "feat(export): preview modal, PNG download, wired in
 - `RunList` gains an `onDelete(id)` prop; each row has a `ConfirmButton` (stopPropagation) that calls it. `LibraryScreen` passes `onDelete = async (id) => { await repo.deleteActivity(id); refresh() }`.
 - `TrendsScreen` gains a "test log" section under the charts: a list of every result (date, kind, key value) each with a `ConfirmButton` delete that calls `repo.deleteTestResult(id)` then re-reads results via `useTestResults().refresh`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/app/components/confirm-button.test.tsx`:
 
@@ -428,9 +428,9 @@ it('deletes a run after confirmation', async () => {
 
 (Import `fixtureBytes` and `waitFor` at the top of that test file if not already present.)
 
-- [ ] **Step 2: Run to verify fail** — missing `ConfirmButton`, no delete affordance.
+- [x] **Step 2: Run to verify fail** — missing `ConfirmButton`, no delete affordance.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `confirm-button.tsx`:
 
@@ -482,7 +482,7 @@ export function ConfirmButton({
 - `RunList`: add `onDelete?: (id: string) => void` prop; add a trailing `<td>` per row with `<ConfirmButton label="Delete run" confirmLabel="Confirm delete" onConfirm={() => onDelete?.(a.id)} />` and add a header cell. `LibraryScreen` passes `onDelete`.
 - `TrendsScreen`: below the chart grid (still inside the `max-w-5xl` wrapper), render a "Test log" list from `results` sorted newest-first: each row shows `formatDate(testDate)`, kind (AeT/AnT), the key value (AeT decoupling % / AnT HR), and a `ConfirmButton label="Delete" confirmLabel="Confirm"` calling `repo.deleteTestResult(r.id)` then `refresh()`. Get `repo` from `useContainer()` and `refresh` from `useTestResults()`.
 
-- [ ] **Step 4: Full gate; commit**
+- [x] **Step 4: Full gate; commit**
 
 ```bash
 git add -A && git commit -m "feat(library,trends): delete runs and test results with inline confirmation"
@@ -500,7 +500,7 @@ git add -A && git commit -m "feat(library,trends): delete runs and test results 
 - `playwright.config.ts`: `testDir: 'e2e'`, `webServer: { command: 'npm run dev', port: 5173, reuseExistingServer: true }`, one chromium project, `use: { baseURL: 'http://localhost:5173' }`.
 - `e2e/core-journeys.spec.ts`: the journeys that are the product.
 
-- [ ] **Step 1: Install and configure**
+- [x] **Step 1: Install and configure**
 
 ```bash
 npm install -D @playwright/test
@@ -528,7 +528,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 2: Write the E2E spec**
+- [x] **Step 2: Write the E2E spec**
 
 `e2e/core-journeys.spec.ts`:
 
@@ -588,12 +588,12 @@ test('export produces a PNG download', async ({ page }) => {
 })
 ```
 
-- [ ] **Step 3: Run E2E**
+- [x] **Step 3: Run E2E**
 
 Run: `npm run test:e2e`
 Expected: 4 passed. (If the environment cannot launch the browser, record the failure and the reason; the specs remain the durable regression suite.)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A && git commit -m "test(e2e): Playwright suite covering import, AeT verdict, ADS/Trends, persistence, export"
@@ -608,9 +608,9 @@ git add -A && git commit -m "test(e2e): Playwright suite covering import, AeT ve
 
 **Interfaces:** —
 
-- [ ] **Step 1:** Write a concise `README.md`: what Runalyze is, the ports-&-adapters layout, `npm run dev|test|build|test:e2e`, and the fixtures/manifest discipline. Keep it short.
-- [ ] **Step 2:** Full gate: `npm test && npm run lint && npm run build`, purity grep, and `npm run test:e2e`. Then `npm run dev` + a playwright-cli pass: run an AeT test, click Export, confirm the preview shows the branded card and the PNG downloads; delete a test from Trends and a run from the Library. Screenshot the export card.
-- [ ] **Step 3:** Fix defects; commit.
+- [x] **Step 1:** Write a concise `README.md`: what Runalyze is, the ports-&-adapters layout, `npm run dev|test|build|test:e2e`, and the fixtures/manifest discipline. Keep it short.
+- [x] **Step 2:** Full gate: `npm test && npm run lint && npm run build`, purity grep, and `npm run test:e2e`. Then `npm run dev` + a playwright-cli pass: run an AeT test, click Export, confirm the preview shows the branded card and the PNG downloads; delete a test from Trends and a run from the Library. Screenshot the export card.
+- [x] **Step 3:** Fix defects; commit.
 
 ## Definition of done (milestone 6)
 

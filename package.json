@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.8",
@@ -21,6 +22,7 @@
     "clsx": "^2.1.1",
     "dexie": "^4.4.4",
     "fflate": "^0.8.3",
+    "html-to-image": "^1.11.13",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
@@ -32,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

@@ -10,7 +10,7 @@ import { ImportDropzone } from './import-dropzone'
 import { RunList } from './run-list'
 
 export function LibraryScreen() {
-  const { parser, repo } = useContainer()
+  const { parser, repo, renderer } = useContainer()
   const { activities, refresh } = useActivities()
   const { results } = useTestResults()
   const navigate = useNavigate()
@@ -52,14 +52,20 @@ export function LibraryScreen() {
   return (
     <div className="mx-auto max-w-5xl space-y-8">
       <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-        <AdsCard status={adsStatus} now={new Date()} />
+        <AdsCard status={adsStatus} now={new Date()} renderer={renderer} />
         <ImportDropzone onFiles={(files) => void handleFiles(files)} />
       </div>
       <section>
         <h2 className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-ink-muted">
           Runs
         </h2>
-        <RunList activities={activities} badges={badges} />
+        <RunList
+          activities={activities}
+          badges={badges}
+          onDelete={(id) => {
+            void repo.deleteActivity(id).then(refresh)
+          }}
+        />
       </section>
     </div>
   )
