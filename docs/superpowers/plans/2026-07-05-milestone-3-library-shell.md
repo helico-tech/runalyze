@@ -52,14 +52,14 @@ Findings from the pre-execution review panel, each empirically verified by the r
 - Consumes: nothing new.
 - Produces: theme tokens (utility classes `bg-bg`, `text-ink`, `text-ink-muted`, `border-line`, `bg-surface`, `bg-surface-2`, `text-ch-hr` …, `font-mono`, `font-sans`), `BRAND` constant, `cn(...inputs)` class combiner, working jsdom component-test pipeline.
 
-- [ ] **Step 1: Install dependencies**
+- [x] **Step 1: Install dependencies**
 
 ```bash
 npm install tailwindcss @tailwindcss/vite @fontsource-variable/inter @fontsource/ibm-plex-mono class-variance-authority clsx tailwind-merge sonner react-router-dom
 npm install -D jsdom @testing-library/react @testing-library/jest-dom @testing-library/user-event
 ```
 
-- [ ] **Step 2: Wire toolchain config**
+- [x] **Step 2: Wire toolchain config**
 
 `vite.config.ts` (full replacement):
 
@@ -89,7 +89,7 @@ export default defineConfig({
     "paths": { "@/*": ["./src/*"] }
 ```
 
-- [ ] **Step 3: Write the failing shell test**
+- [x] **Step 3: Write the failing shell test**
 
 `src/App.test.tsx`:
 
@@ -119,12 +119,12 @@ describe('AppShell', () => {
 
 (Note: `toHaveTextContent`/`toBeInTheDocument` need `import '@testing-library/jest-dom/vitest'` — add it as the second import line.)
 
-- [ ] **Step 4: Run test to verify it fails**
+- [x] **Step 4: Run test to verify it fails**
 
 Run: `npm test`
 Expected: FAIL — `AppShell` is not exported.
 
-- [ ] **Step 5: Implement theme and shell**
+- [x] **Step 5: Implement theme and shell**
 
 `src/index.css`:
 
@@ -239,7 +239,7 @@ createRoot(document.getElementById('root')!).render(
 )
 ```
 
-- [ ] **Step 6: Run tests, lint, build; commit**
+- [x] **Step 6: Run tests, lint, build; commit**
 
 Run: `npm test && npm run lint && npm run build`
 Expected: all green.
@@ -264,7 +264,7 @@ git commit -m "feat(app): Tailwind v4 dark-scientific theme, brand shell, jsdom 
   - `formatBpm(v: number | null): string` — `'159 bpm'` rounded; `'–'` for null
   - `formatDate(d: Date): string` — ISO date part `'2026-07-05'`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/app/format.test.ts`:
 
@@ -301,11 +301,11 @@ describe('format', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test` — Expected: FAIL, cannot resolve `./format`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/app/format.ts`:
 
@@ -342,7 +342,7 @@ export function formatDate(d: Date): string {
 }
 ```
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 Run: `npm test` — Expected: PASS.
 
@@ -363,7 +363,7 @@ git add -A && git commit -m "feat(app): SI-to-display format utilities"
   - `interface ActivitySummary { durationS: number; distanceM: number | null; avgHr: number | null; avgSpeed: number | null; avgPower: number | null }`
   - `activitySummary(a: Activity): ActivitySummary` — averages are sample-weighted over the non-excluded range (`null` when the channel is absent or has no weight); `distanceM` = last minus first sample of the cumulative distance channel.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/domain/analysis/activity-summary.test.ts`:
 
@@ -419,9 +419,9 @@ describe('activitySummary', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — `npm test`, FAIL on missing module.
+- [x] **Step 2: Run to verify fail** — `npm test`, FAIL on missing module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/domain/analysis/activity-summary.ts`:
 
@@ -459,7 +459,7 @@ export function activitySummary(a: Activity): ActivitySummary {
 }
 ```
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(domain): activity summary for library display"
@@ -481,7 +481,7 @@ git add -A && git commit -m "feat(domain): activity summary for library display"
   - `type ImportResult = { status: 'imported' | 'duplicate'; filename: string; activityId: string } | { status: 'error'; filename: string; reason: string }`
   - `importFiles(files: Array<{ name: string; bytes: Uint8Array }>, parser: ActivityFileParser, repo: LibraryRepository): Promise<ImportResult[]>`
 
-- [ ] **Step 1: Extract the contract and write the failing tests**
+- [x] **Step 1: Extract the contract and write the failing tests**
 
 `src/adapters/storage/library-repository-contract.ts` — move the eight test cases from `dexie-library-repository.test.ts` verbatim into an exported function, replacing `freshRepo()` with the injected factory (body identical to the current file's tests, so it is not repeated here in full — it is a mechanical move):
 
@@ -574,9 +574,9 @@ describe('importFiles', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — `npm test`: FAIL on missing modules (contract file import in dexie test, in-memory class, import service).
+- [x] **Step 2: Run to verify fail** — `npm test`: FAIL on missing modules (contract file import in dexie test, in-memory class, import service).
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/adapters/storage/in-memory-library-repository.ts`:
 
@@ -711,7 +711,7 @@ export async function importFiles(
 }
 ```
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 Run: `npm test` — Expected: PASS (contract runs twice: Dexie + in-memory).
 
@@ -735,7 +735,7 @@ git add -A && git commit -m "feat(app): import service with dedupe; in-memory re
   - `useActivities(): { activities: Activity[]; loading: boolean; refresh: () => void }`
   - `useTestResults(): { results: TestResult[]; refresh: () => void }`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/app/container.test.ts`:
 
@@ -767,9 +767,9 @@ describe('createContainer', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing module.
+- [x] **Step 2: Run to verify fail** — missing module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/app/container.ts`:
 
@@ -855,7 +855,7 @@ export function useTestResults() {
 }
 ```
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(app): composition root with IndexedDB fallback, container context, data hooks"
@@ -879,7 +879,7 @@ git add -A && git commit -m "feat(app): composition root with IndexedDB fallback
   - `LibraryScreen()` — composes all of it, owns import flow + toasts + session banner
   - Routes: `/` → LibraryScreen, `/activity/:id` → ActivityScreen (placeholder detail)
 
-- [ ] **Step 1: Write the failing component tests**
+- [x] **Step 1: Write the failing component tests**
 
 `src/app/screens/library/ads-card.test.tsx`:
 
@@ -1027,9 +1027,9 @@ describe('LibraryScreen', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing modules.
+- [x] **Step 2: Run to verify fail** — missing modules.
 
-- [ ] **Step 3: Implement the vendored UI primitives**
+- [x] **Step 3: Implement the vendored UI primitives**
 
 `src/components/ui/button.tsx`:
 
@@ -1135,7 +1135,7 @@ export function Badge({ className, variant, ...props }: BadgeProps) {
 }
 ```
 
-- [ ] **Step 4: Implement the Library screen pieces**
+- [x] **Step 4: Implement the Library screen pieces**
 
 `src/app/screens/library/ads-card.tsx` — the signature readout:
 
@@ -1488,7 +1488,7 @@ export function ActivityScreen() {
 }
 ```
 
-- [ ] **Step 5: Wire routes and bootstrap**
+- [x] **Step 5: Wire routes and bootstrap**
 
 `src/App.tsx` (full replacement — `AppShell` unchanged, `App` gains routes):
 
@@ -1562,7 +1562,7 @@ void createContainer().then((container) => {
 
 (The `App.test.tsx` from Task 1 keeps passing: it renders `AppShell` directly inside `MemoryRouter`.)
 
-- [ ] **Step 6: Run all tests, full gate; commit**
+- [x] **Step 6: Run all tests, full gate; commit**
 
 Run: `npm test && npm run lint && npm run build`
 Expected: all green (component tests included).
@@ -1579,8 +1579,8 @@ git commit -m "feat(app): Library screen - import dropzone, run table, ADS reado
 
 ### Task 7: Visual verification
 
-- [ ] **Step 1:** `npm run dev`, open the app with playwright-cli, screenshot the empty library, import `tests/fixtures/user-run-2026-07-05.fit` through the real UI, screenshot the populated library and the activity detail page. Confirm: dark theme applied, mono numerals, ADS empty state, toasts fire, run row shows `2026-07-05 · running · 1:00:01 · 9.04 km · 159 bpm · 6:39 /km`.
-- [ ] **Step 2:** Fix any visual defects found (spacing, contrast, focus states); re-verify; commit.
+- [x] **Step 1:** `npm run dev`, open the app with playwright-cli, screenshot the empty library, import `tests/fixtures/user-run-2026-07-05.fit` through the real UI, screenshot the populated library and the activity detail page. Confirm: dark theme applied, mono numerals, ADS empty state, toasts fire, run row shows `2026-07-05 · running · 1:00:01 · 9.04 km · 159 bpm · 6:39 /km`.
+- [x] **Step 2:** Fix any visual defects found (spacing, contrast, focus states); re-verify; commit.
 
 ## Definition of done (milestone 3)
 

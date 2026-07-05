@@ -1,0 +1,37 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --color-bg: #0b0e14;
+  --color-surface: #131720;
+  --color-surface-2: #1a2029;
+  --color-line: #232b36;
+  --color-ink: #e6ebf0;
+  --color-ink-muted: #8a97a5;
+
+  --color-ch-hr: #ff6b6b;
+  --color-ch-pace: #4cc9f0;
+  --color-ch-power: #a78bfa;
+  --color-ch-cadence: #ffc53d;
+  --color-ch-altitude: #6bcb77;
+
+  --color-ok: #3dd68c;
+  --color-caution: #f5a524;
+  --color-danger: #f0525f;
+  --color-focus: #5b9dff;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-bg font-sans text-ink antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+}
