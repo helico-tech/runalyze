@@ -12,7 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen">
       <header
         role="banner"
-        className="sticky top-0 z-30 flex items-baseline gap-3 border-b border-line bg-bg px-6 py-3"
+        className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-line bg-bg px-6"
       >
         <Link to="/" className="font-mono text-sm font-semibold uppercase tracking-[0.25em]">
           {BRAND}

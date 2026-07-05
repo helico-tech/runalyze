@@ -131,8 +131,10 @@ function Workspace({
         ← library
       </Link>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {present.map((c) => (
+      {/* Controls + hover readout stay pinned below the sticky header while charts scroll. */}
+      <div className="sticky top-14 z-20 space-y-3 bg-bg pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {present.map((c) => (
           <button
             key={c.key}
             type="button"
@@ -232,7 +234,8 @@ function Workspace({
         </div>
       )}
 
-      <HoverReadout activity={activity} store={store} />
+        <HoverReadout activity={activity} store={store} />
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <ChartStack activity={activity} store={store} />
