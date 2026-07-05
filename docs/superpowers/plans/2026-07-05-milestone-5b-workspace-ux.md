@@ -40,7 +40,7 @@
   - `interface HoverValue { key: DisplayChannel; label: string; colorHex: string; text: string }`
   - `channelValuesAt(activity: Activity, tS: number): HoverValue[]` — for each present display channel, the nearest sample formatted via its channel meta (skips channels with no samples).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `src/app/screens/activity/chart-geometry.test.ts`:
 
@@ -98,9 +98,9 @@ describe('channelValuesAt', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing exports/module.
+- [x] **Step 2: Run to verify fail** — missing exports/module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Append to `chart-geometry.ts`:
 
@@ -158,7 +158,7 @@ export function channelValuesAt(activity: Activity, tS: number): HoverValue[] {
 }
 ```
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(workspace): pure cursor-cue and nearest-sample channel-value helpers"
@@ -175,7 +175,7 @@ git add -A && git commit -m "feat(workspace): pure cursor-cue and nearest-sample
 - store adds `hoverT: number | null` (init `null`, reset to `null` in `init`) and `setHoverT(t: number | null)`.
 - persistence hook: its subscribe listener must early-return when neither `sectors` nor `exclusions` changed by reference since the last fire (so `setHoverT` never schedules a repo flush).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Append to `workspace-store.test.ts` (inside the existing `describe('workspace store', ...)` or a new one):
 
@@ -194,9 +194,9 @@ describe('workspace store hover', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — `hoverT`/`setHoverT` missing.
+- [x] **Step 2: Run to verify fail** — `hoverT`/`setHoverT` missing.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `workspace-store.ts`: add `hoverT: number | null` and `setHoverT(t: number | null): void` to `WorkspaceState`; initialize `hoverT: null` in the store body and in `init`'s `set({...})`; add the action `setHoverT: (hoverT) => set({ hoverT })`.
 
@@ -217,7 +217,7 @@ In `use-workspace-persistence.ts`, guard the subscribe listener. Replace the sub
 
 (The `prevSectors`/`prevExclusions` refs used inside `flush` still seed as before.)
 
-- [ ] **Step 4: Verify pass; commit**
+- [x] **Step 4: Verify pass; commit**
 
 ```bash
 git add -A && git commit -m "feat(workspace): transient hoverT store state with persistence guard"
@@ -236,7 +236,7 @@ git add -A && git commit -m "feat(workspace): transient hoverT store state with 
 - During a drag: set the cursor via `cursorForTarget(drag.target, true)` on pointerdown.
 - Overlay draws grip handles: at each non-excluded sector's start/end edges and at both trim boundaries, draw a short centered vertical "grip" (a 3px-wide rounded bar spanning the middle ~40% of the pane height) in the band's stroke color, so edges read as draggable.
 
-- [ ] **Step 1: Implement**
+- [x] **Step 1: Implement**
 
 In `chart-stack.tsx`:
 - import `cursorForTarget` alongside the other geometry imports.
@@ -273,9 +273,9 @@ In `chart-stack.tsx`:
 
 Call `grip(xpos(exclusions.warmupEndS), 'rgba(240,82,95,0.8)')` and `grip(xpos(exclusions.cooldownStartS), 'rgba(240,82,95,0.8)')` for trims, and for each sector `grip(x0, edgeColor)` and `grip(x1, edgeColor)` where `edgeColor` is the band's stroke color (green for test-window, blue otherwise).
 
-- [ ] **Step 2: Lint + build** (`npm run lint && npm run build` — exit 0).
+- [x] **Step 2: Lint + build** (`npm run lint && npm run build` — exit 0).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add -A && git commit -m "feat(workspace): hover cursor cues, hover-time tracking, and draggable grip handles"
@@ -293,7 +293,7 @@ git add -A && git commit -m "feat(workspace): hover cursor cues, hover-time trac
 - `HoverReadout({ activity, store })` — subscribes to `hoverT` via `useZustand(store, s => s.hoverT)`; when null shows a muted "hover a chart for values" hint; otherwise shows the elapsed time and each channel's value (colored chips) via `channelValuesAt`. Only this component re-renders on hover.
 - Layout: `AppShell` main becomes full-width padding only; Library and Trends wrap their content in `mx-auto max-w-5xl`; the workspace wraps in `mx-auto max-w-[1600px]` and uses a `lg:grid-cols-[1fr_360px]` split with taller charts.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/app/screens/activity/hover-readout.test.tsx`:
 
@@ -335,9 +335,9 @@ describe('HoverReadout', () => {
 })
 ```
 
-- [ ] **Step 2: Run to verify fail** — missing module.
+- [x] **Step 2: Run to verify fail** — missing module.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/app/screens/activity/hover-readout.tsx`:
 
@@ -375,7 +375,7 @@ In `App.tsx`: change `<main className="mx-auto max-w-5xl px-6 py-8">` to `<main 
 
 Also bump chart height in `chart-stack.tsx` from 140 to 180 (both the `new uPlot` `height` and the placeholder `h-[140px]` → `h-[180px]`, and the resize `setSize` height) for the roomier layout.
 
-- [ ] **Step 4: Full gate; commit**
+- [x] **Step 4: Full gate; commit**
 
 Run: `npm test && npm run lint && npm run build`
 Expected: all green. Purity grep clean.
@@ -388,8 +388,8 @@ git add -A && git commit -m "feat(workspace): channel hover readout and near-ful
 
 ### Task 5: Visual verification
 
-- [ ] **Step 1:** `npm run dev`; via playwright-cli open the user run's workspace. Confirm: hovering a chart updates the readout bar with each channel's value at the cursor time; the cursor becomes `ew-resize` near a sector edge / trim and `grab` inside a sector; grip handles are visible at edges; the workspace fills much more of the screen with the analysis panel on the right. Screenshot the hover readout and the wide layout.
-- [ ] **Step 2:** Fix defects; re-verify; commit.
+- [x] **Step 1:** `npm run dev`; via playwright-cli open the user run's workspace. Confirm: hovering a chart updates the readout bar with each channel's value at the cursor time; the cursor becomes `ew-resize` near a sector edge / trim and `grab` inside a sector; grip handles are visible at edges; the workspace fills much more of the screen with the analysis panel on the right. Screenshot the hover readout and the wide layout.
+- [x] **Step 2:** Fix defects; re-verify; commit.
 
 ## Definition of done (milestone 5b)
 
