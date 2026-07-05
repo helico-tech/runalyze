@@ -40,7 +40,7 @@ These are observations, not assumptions — the plan's code relies on them:
 - Consumes: nothing.
 - Produces: fixture files + manifest used by Tasks 2–5. Dependencies `@garmin/fitsdk`, `fflate`, `dexie` (runtime); `fake-indexeddb`, `@types/node` (dev).
 
-- [ ] **Step 1: Provision fixture files**
+- [x] **Step 1: Provision fixture files**
 
 ```bash
 mkdir -p tests/fixtures
@@ -55,7 +55,7 @@ ls -la tests/fixtures/
 
 Expected: 8 files present (7 fixtures + manifest comes next step).
 
-- [ ] **Step 2: Write the fixtures manifest**
+- [x] **Step 2: Write the fixtures manifest**
 
 `tests/fixtures/fixtures-manifest.md`:
 
@@ -123,7 +123,7 @@ Drop additional real runs here, extend this manifest with independently computed
 BEFORE writing tests that use them (decode with a standalone script, record the numbers).
 ```
 
-- [ ] **Step 3: Install dependencies and admit node types into the tsc program**
+- [x] **Step 3: Install dependencies and admit node types into the tsc program**
 
 ```bash
 npm install @garmin/fitsdk fflate dexie
@@ -137,12 +137,12 @@ Without this, `@types/node`'s ambient `node:fs`/`node:url` declarations never en
 program and `npm run build` (tsc --noEmit) fails on the Task 2 fixtures helper — vitest
 transpiles without typechecking, so the break would surface only at the final gate.
 
-- [ ] **Step 4: Verify existing gates still pass**
+- [x] **Step 4: Verify existing gates still pass**
 
 Run: `npm test && npm run lint && npm run build`
 Expected: all green (58 tests, no new code yet).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -169,7 +169,7 @@ git commit -m "chore: FIT fixtures with independently computed manifest, adapter
 
 Normalization rules (spec §2.4/§5, spike facts): startTime = session start else first record timestamp; per-record relative `t = (ts − startTime)/1000`, records with missing timestamps, `t < 0`, or non-increasing `t` are dropped; channel values must be finite numbers; `speed = enhancedSpeed ?? speed`; `altitude = enhancedAltitude ?? altitude`; `power = native ?? developer-field power` (description with `fieldName === 'Power'` and Watts units, looked up by its `key`); cadence: stride sports (running/walking/hiking) record strides/min in FIT — normalize to spm as `2 × (cadence + (fractionalCadence ?? 0))`; other sports keep native units (cycling rpm, etc.), and session-less files (sport `'unknown'`) are not doubled; `durationS = session.totalElapsedTime ?? lastRelT`; `sport = session ?? sportMesgs ?? 'unknown'`; `device = String(garminProduct ?? manufacturer) ?? null`; channels with zero samples are omitted; an activity with zero channels is an error.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/adapters/testing/fixtures.ts`:
 
@@ -284,12 +284,12 @@ describe('decodeFitActivity', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — cannot resolve `./hash` / `./decode-fit`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/domain/ports/activity-file-parser.ts`:
 
@@ -462,12 +462,12 @@ export function decodeFitActivity(bytes: Uint8Array, id: string): Activity {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -485,7 +485,7 @@ git commit -m "feat(adapters): ports, SHA-256 hashing, FIT decode adapter with d
 - Consumes: `ActivityFileParser`, `ParseOutcome` (Task 2 port); `decodeFitActivity`, `FitDecodeError`, `sha256Hex` (Task 2); `unzipSync`, `zipSync` from `fflate`.
 - Produces: `class GarminFitFileParser implements ActivityFileParser` — the parser adapter the app container will wire in milestone 3. Activity `id` = SHA-256 of the individual file's bytes (zip entries hash per-entry).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/adapters/fit/fit-file-parser.test.ts`:
 
@@ -559,12 +559,12 @@ describe('GarminFitFileParser', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — cannot resolve `./fit-file-parser`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/adapters/fit/fit-file-parser.ts`:
 
@@ -623,12 +623,12 @@ export class GarminFitFileParser implements ActivityFileParser {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -646,7 +646,7 @@ git commit -m "feat(adapters): zip-aware FIT file parser implementing the Activi
 - Consumes: `LibraryRepository` port (Task 2); domain model types; `dexie`; `fake-indexeddb` named exports `IDBFactory`, `IDBKeyRange` (tests).
 - Produces: `class DexieLibraryRepository implements LibraryRepository`, constructor `new DexieLibraryRepository(opts?: { name?: string; indexedDB?: IDBFactory; IDBKeyRange?: typeof IDBKeyRange })` — no opts in the browser, injected fakes in tests. Dexie schema **version 1**: `activities: 'id, startTime'`, `rawFiles: 'id'`, `sectors: 'id, activityId'`, `testResults: 'id, activityId'`, `notes: 'activityId'`. Raw bytes live in their own table so `listActivities()` never hauls file blobs.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 `src/adapters/storage/dexie-library-repository.test.ts`:
 
@@ -786,12 +786,12 @@ describe('DexieLibraryRepository', () => {
 })
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npm test`
 Expected: FAIL — cannot resolve `./dexie-library-repository`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/adapters/storage/dexie-library-repository.ts`:
 
@@ -915,12 +915,12 @@ export class DexieLibraryRepository implements LibraryRepository {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npm test`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add -A
@@ -938,7 +938,7 @@ git commit -m "feat(adapters): Dexie LibraryRepository with cascade delete and i
 - Consumes: everything above plus `computeDecoupling`, `evaluateAetTest`, `sectorStats` (milestone 1).
 - Produces: proof the stack composes on real data; expected values from the manifest.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 `src/adapters/integration.test.ts`:
 
@@ -1001,12 +1001,12 @@ describe('integration: parse -> store -> analyze on real files', () => {
 })
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npm test`
 Expected: the new file FAILS only if implementation gaps exist — if Tasks 2–4 are correct it may pass immediately; TDD value here is the assertion against pre-registered manifest values, not the red phase. If it fails, the failing assertion pinpoints which adapter diverges from the manifest.
 
-- [ ] **Step 3: Run the full gate**
+- [x] **Step 3: Run the full gate**
 
 Run: `npm test && npm run lint && npm run build`
 Expected: all green.
@@ -1014,7 +1014,7 @@ Expected: all green.
 Run: `grep -rE "from 'react|from 'dexie|@garmin|document\.|window\." src/domain/`
 Expected: no output (ports are types-only).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add -A
