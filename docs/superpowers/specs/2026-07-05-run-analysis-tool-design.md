@@ -194,8 +194,9 @@ e2e/                     # Playwright specs
 ### 3.3 Persistence
 
 - Dexie database, schema version 1, with explicit migration discipline from day one.
-- Stores: `activities` (metadata + channels + raw bytes), `sectors`, `testResults`,
-  `notes`.
+- Stores: `activities` (metadata + channels + raw bytes + warmup/cooldown exclusion
+  ranges), `sectors`, `testResults`, `notes`. Exclusions live on the activity record —
+  they are per-activity singletons, not a list worth its own store.
 - Import pipeline: bytes → SHA-256 content hash → if hash exists, surface "already in
   library, opening it" and open the existing activity → else parse, normalize, persist.
 - If IndexedDB is unavailable (private browsing, quota), the app runs session-only with a
