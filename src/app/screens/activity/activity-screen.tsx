@@ -1,26 +1,52 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { activitySummary } from '../../../domain/analysis/activity-summary'
+import { useStore as useZustand } from 'zustand'
 import type { Activity } from '../../../domain/model/types'
+import type { LibraryRepository } from '../../../domain/ports/library-repository'
+import { channelsPresent, driftChannelLabel } from '../../channels'
 import { useContainer } from '../../container-context'
-import { formatBpm, formatDate, formatDistanceKm, formatDuration, formatPace } from '../../format'
+import { formatDuration } from '../../format'
+import { ChartStack } from './chart-stack'
+import { NotesPanel } from './notes-panel'
+import { StatsPanel } from './stats-panel'
+import { createWorkspaceStore, type WorkspaceStore } from './workspace-store'
+import { useWorkspacePersistence } from './use-workspace-persistence'
+import { cn } from '@/lib/utils'
 
 export function ActivityScreen() {
   const { id } = useParams<{ id: string }>()
   const { repo } = useContainer()
+  const [store] = useState(() => createWorkspaceStore())
   const [activity, setActivity] = useState<Activity | null>(null)
+  const [note, setNote] = useState('')
   const [loading, setLoading] = useState(true)
+  const [ready, setReady] = useState(false)
 
   useEffect(() => {
     if (!id) return
-    void repo.getActivity(id).then((a) => {
-      setActivity(a)
+    let alive = true
+    void (async () => {
+      const a = await repo.getActivity(id)
+      if (!alive) return
+      if (a) {
+        const sectors = await repo.listSectors(id)
+        const n = await repo.getNote(id)
+        store.getState().init(a, sectors)
+        setActivity(a)
+        setNote(n?.text ?? '')
+        setReady(true)
+      }
       setLoading(false)
-    })
-  }, [repo, id])
+    })()
+    return () => {
+      alive = false
+    }
+  }, [repo, id, store])
+
+  useWorkspacePersistence(store, repo, id ?? '', ready)
 
   if (loading) return <p className="text-ink-muted">Loading…</p>
-  if (!activity) {
+  if (!activity)
     return (
       <p className="text-ink-muted">
         Run not found.{' '}
@@ -29,24 +55,113 @@ export function ActivityScreen() {
         </Link>
       </p>
     )
-  }
-  const s = activitySummary(activity)
+
+  return <Workspace activity={activity} store={store} initialNote={note} repo={repo} />
+}
+
+function Workspace({
+  activity,
+  store,
+  initialNote,
+  repo,
+}: {
+  activity: Activity
+  store: WorkspaceStore
+  initialNote: string
+  repo: LibraryRepository
+}) {
+  const visible = useZustand(store, (s) => s.visible)
+  const driftChannel = useZustand(store, (s) => s.driftChannel)
+  const sectors = useZustand(store, (s) => s.sectors)
+  const exclusions = useZustand(store, (s) => s.exclusions)
+  const selectedSectorId = useZustand(store, (s) => s.selectedSectorId)
+  const present = useMemo(() => channelsPresent(activity), [activity])
+
+  const saveNote = useCallback(
+    (text: string) => void repo.saveNote({ activityId: activity.id, text, updatedAt: new Date() }),
+    [repo, activity.id],
+  )
+
   return (
     <div className="space-y-4">
       <Link to="/" className="font-mono text-xs uppercase tracking-widest text-ink-muted">
         ← library
       </Link>
-      <h1 className="font-mono text-2xl tabular-nums">
-        {formatDate(activity.startTime)} · {activity.sport}
-      </h1>
-      <p className="font-mono text-sm text-ink-muted">
-        {formatDuration(s.durationS)} · {formatDistanceKm(s.distanceM)} ·{' '}
-        <span className="text-ch-hr">{formatBpm(s.avgHr)}</span> ·{' '}
-        <span className="text-ch-pace">{s.avgSpeed === null ? '–' : formatPace(s.avgSpeed)}</span>
-      </p>
-      <p className="text-sm text-ink-muted">
-        The analysis workspace (charts, sectors, tests) arrives in milestone 4.
-      </p>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {present.map((c) => (
+          <button
+            key={c.key}
+            type="button"
+            onClick={() => store.getState().toggleChannel(c.key)}
+            className={cn(
+              'rounded border px-2 py-1 font-mono text-xs',
+              visible.has(c.key) ? 'border-line bg-surface-2' : 'border-line/50 text-ink-muted',
+            )}
+            style={visible.has(c.key) ? { color: c.colorHex } : undefined}
+          >
+            {c.label}
+          </button>
+        ))}
+        <span className="ml-auto flex items-center gap-2 font-mono text-xs text-ink-muted">
+          drift
+          {(['speed', 'power'] as const).map((d) => (
+            <button
+              key={d}
+              type="button"
+              disabled={d === 'power' && !activity.channels.power}
+              onClick={() => store.getState().setDriftChannel(d)}
+              className={cn(
+                'rounded border border-line px-2 py-1',
+                driftChannel === d ? 'bg-surface-2 text-ink' : 'text-ink-muted',
+                d === 'power' && !activity.channels.power && 'opacity-40',
+              )}
+            >
+              {driftChannelLabel(d)}
+            </button>
+          ))}
+        </span>
+      </div>
+
+      {sectors.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {sectors.map((s) => (
+            <span
+              key={s.id}
+              className={cn(
+                'flex items-center gap-2 rounded border px-2 py-1 font-mono text-xs',
+                s.id === selectedSectorId ? 'border-focus text-ink' : 'border-line text-ink-muted',
+              )}
+            >
+              <button type="button" onClick={() => store.getState().select(s.id)}>
+                {formatDuration(s.range.startS)}–{formatDuration(s.range.endS)}
+              </button>
+              <button
+                type="button"
+                aria-label="delete sector"
+                onClick={() => store.getState().removeSector(s.id)}
+                className="text-ink-muted hover:text-danger"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <ChartStack activity={activity} store={store} />
+        <div className="space-y-6">
+          <StatsPanel
+            activity={activity}
+            sectors={sectors}
+            exclusions={exclusions}
+            driftChannel={driftChannel}
+            selectedSectorId={selectedSectorId}
+          />
+          <NotesPanel initialText={initialNote} onSave={saveNote} />
+        </div>
+      </div>
     </div>
   )
 }
