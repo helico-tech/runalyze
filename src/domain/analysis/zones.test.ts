@@ -31,6 +31,11 @@ describe('resolveThresholds', () => {
   it('null global with no test yields nulls', () => {
     expect(resolveThresholds('run1', null, [])).toEqual({ aetHr: null, antHr: null })
   })
+  it('a saved test with null aetHr does not override the global aetHr', () => {
+    const nullAetTest: AetTestResult = { ...aetTest, aetHr: null }
+    const g = { aetHr: 145, antHr: 168, updatedAt: new Date('2026-07-06T00:00:00Z') }
+    expect(resolveThresholds('run1', g, [nullAetTest])).toEqual({ aetHr: 145, antHr: 168 })
+  })
 })
 
 describe('computeZones', () => {

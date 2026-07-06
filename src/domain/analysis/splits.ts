@@ -54,19 +54,24 @@ function attributeElevation(
   const losses = new Array<number>(ranges.length).fill(0)
 
   let splitIdx = 0
-  for (let i = 1; i < alt.t.length; i++) {
-    const vPrev = alt.v[i - 1]!
+  let prev: number | undefined
+  let prevT = 0
+  for (let i = 0; i < alt.t.length; i++) {
     const vCur = alt.v[i]!
-    if (!Number.isFinite(vPrev) || !Number.isFinite(vCur)) continue
+    if (!Number.isFinite(vCur)) continue // skip without resetting prev, bridging the gap
 
-    const tPrev = alt.t[i - 1]!
-    while (splitIdx < ranges.length - 1 && tPrev >= ranges[splitIdx]!.endS) {
-      splitIdx++
+    if (prev !== undefined) {
+      while (splitIdx < ranges.length - 1 && prevT >= ranges[splitIdx]!.endS) {
+        splitIdx++
+      }
+
+      const delta = vCur - prev
+      if (delta > 0) gains[splitIdx]! += delta
+      else if (delta < 0) losses[splitIdx]! += -delta
     }
 
-    const delta = vCur - vPrev
-    if (delta > 0) gains[splitIdx]! += delta
-    else if (delta < 0) losses[splitIdx]! += -delta
+    prev = vCur
+    prevT = alt.t[i]!
   }
 
   return ranges.map((_, i) => ({ gain: gains[i]!, loss: losses[i]! }))

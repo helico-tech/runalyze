@@ -100,4 +100,24 @@ describe('computeSplits', () => {
     expect(gainSum).toBeCloseTo(naiveGain, 6)
     expect(lossSum).toBeCloseTo(naiveLoss, 6)
   })
+
+  it('bridges a NaN altitude sample instead of dropping the delta it straddles', () => {
+    // Flat at 100m, one NaN sample, then a jump to 130m, over a single ~1km split
+    // (300 samples at 3 m/s ≈ 900m, well within one split). The NaN sample itself
+    // must not be counted, but the real +30m rise bridging it must be.
+    const t = Array.from({ length: 300 }, (_, i) => i)
+    const altV = t.map((s) => (s < 150 ? 100 : s === 150 ? NaN : 130))
+    const a = syntheticActivity({
+      durationS: 300,
+      channels: {
+        distance: makeSeries(t, t.map((s) => s * 3)),
+        altitude: makeSeries(t, altV),
+      },
+    })
+    const splits = computeSplits(a)
+    const gainSum = splits.reduce((sum, s) => sum + (s.elevGainM ?? 0), 0)
+    const lossSum = splits.reduce((sum, s) => sum + (s.elevLossM ?? 0), 0)
+    expect(gainSum).toBeCloseTo(30, 6)
+    expect(lossSum).toBeCloseTo(0, 6)
+  })
 })
