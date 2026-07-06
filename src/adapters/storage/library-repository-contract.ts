@@ -126,5 +126,27 @@ export function libraryRepositoryContract(makeRepo: () => LibraryRepository): vo
       expect(await repo.listTestResults()).toEqual([])
       expect(await repo.getNote('a1')).toBeNull()
     })
+
+    it('returns null thresholds before any are saved', async () => {
+      const repo = makeRepo()
+      expect(await repo.getThresholds()).toBeNull()
+    })
+
+    it('round-trips global thresholds', async () => {
+      const repo = makeRepo()
+      const t = { aetHr: 145, antHr: 168, updatedAt: new Date('2026-07-06T09:00:00Z') }
+      await repo.saveThresholds(t)
+      const loaded = await repo.getThresholds()
+      expect(loaded).toEqual(t)
+      expect(loaded!.updatedAt).toEqual(new Date('2026-07-06T09:00:00Z'))
+    })
+
+    it('overwrites thresholds on re-save', async () => {
+      const repo = makeRepo()
+      await repo.saveThresholds({ aetHr: 140, antHr: 160, updatedAt: new Date('2026-07-01T00:00:00Z') })
+      await repo.saveThresholds({ aetHr: 145, antHr: null, updatedAt: new Date('2026-07-06T00:00:00Z') })
+      const loaded = await repo.getThresholds()
+      expect(loaded).toEqual({ aetHr: 145, antHr: null, updatedAt: new Date('2026-07-06T00:00:00Z') })
+    })
   })
 }

@@ -99,3 +99,12 @@ export interface Note {
   text: string
   updatedAt: Date
 }
+
+/** Global, single-athlete manual thresholds. One row for the whole app. */
+export interface Thresholds {
+  /** manual aerobic-threshold HR (bpm); null when never set */
+  aetHr: number | null
+  /** manual anaerobic-threshold HR (bpm); null when never set */
+  antHr: number | null
+  updatedAt: Date
+}
