@@ -39,7 +39,6 @@ describe('LibraryScreen', () => {
   it('shows empty states initially', async () => {
     renderScreen()
     expect(await screen.findByText(/no runs yet/i)).toBeInTheDocument()
-    expect(screen.getByText(/run an aet test to begin/i)).toBeInTheDocument()
   })
 
   it('imports a dropped FIT file and lists the run', async () => {

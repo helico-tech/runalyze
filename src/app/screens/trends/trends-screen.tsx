@@ -1,16 +1,20 @@
 import { useMemo } from 'react'
+import { assessAds } from '../../../domain/analysis/ads-assessment'
 import { ADS_GAP_THRESHOLD_PCT } from '../../../domain/analysis/protocol-constants'
 import type { AetTestResult, AntTestResult, TestResult } from '../../../domain/model/types'
 import { ConfirmButton } from '../../components/confirm-button'
 import { useContainer } from '../../container-context'
 import { useTestResults } from '../../hooks'
 import { formatBpm, formatDate } from '../../format'
+import { AdsVerdict } from './ads-verdict'
 import { TrendChart } from './trend-chart'
 import type { Point } from './trends-geometry'
 
 export function TrendsScreen() {
-  const { repo } = useContainer()
+  const { repo, renderer } = useContainer()
   const { results, refresh } = useTestResults()
+
+  const adsStatus = useMemo(() => assessAds(results, new Date()), [results])
 
   const { aetHr, antHr, decoupling, gap } = useMemo(() => {
     const aets = results
@@ -61,6 +65,7 @@ export function TrendsScreen() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
+      <AdsVerdict status={adsStatus} renderer={renderer} />
       <div className="grid gap-4 sm:grid-cols-2">
         <TrendChart title="AeT HR" unit="bpm" points={aetHr} colorHex="#ff6b6b" />
         <TrendChart title="AnT HR" unit="bpm" points={antHr} colorHex="#ff6b6b" />

@@ -1,21 +1,18 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
-import { assessAds } from '../../../domain/analysis/ads-assessment'
 import { useContainer } from '../../container-context'
 import { useActivities, useTestResults } from '../../hooks'
 import { importFiles } from '../../import-service'
-import { AdsCard } from './ads-card'
 import { ImportDropzone } from './import-dropzone'
 import { RunList } from './run-list'
 
 export function LibraryScreen() {
-  const { parser, repo, renderer } = useContainer()
+  const { parser, repo } = useContainer()
   const { activities, refresh } = useActivities()
   const { results } = useTestResults()
   const navigate = useNavigate()
 
-  const adsStatus = useMemo(() => assessAds(results, new Date()), [results])
   const badges = useMemo(() => {
     const map = new Map<string, string[]>()
     for (const r of results) {
@@ -51,10 +48,7 @@ export function LibraryScreen() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
-      <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-        <AdsCard status={adsStatus} now={new Date()} renderer={renderer} />
-        <ImportDropzone onFiles={(files) => void handleFiles(files)} />
-      </div>
+      <ImportDropzone onFiles={(files) => void handleFiles(files)} />
       <section>
         <h2 className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-ink-muted">
           Runs

@@ -3,11 +3,9 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { AetTestResult, AntTestResult } from '../../../domain/model/types'
-import { AdsCard } from './ads-card'
+import { AdsVerdict } from './ads-verdict'
 
 afterEach(cleanup)
-
-const NOW = new Date('2026-07-05T00:00:00Z')
 
 const aet: AetTestResult = {
   kind: 'aet',
@@ -34,20 +32,20 @@ const ant: AntTestResult = {
   windowAvgPower: null,
 }
 
-describe('AdsCard', () => {
-  it('invites action when no tests exist', () => {
-    render(<AdsCard status={{ state: 'no-tests' }} now={NOW} />)
-    expect(screen.getByText(/run an aet test to begin/i)).toBeInTheDocument()
+describe('AdsVerdict', () => {
+  it('renders nothing when there are no tests', () => {
+    const { container } = render(<AdsVerdict status={{ state: 'no-tests' }} />)
+    expect(container).toBeEmptyDOMElement()
   })
 
   it('names the missing test', () => {
-    render(<AdsCard status={{ state: 'missing-ant', aet }} now={NOW} />)
+    render(<AdsVerdict status={{ state: 'missing-ant', aet }} />)
     expect(screen.getByText(/ant test still needed/i)).toBeInTheDocument()
   })
 
-  it('shows gap, verdict, ages, and provenance when assessed', () => {
+  it('shows the gap and a deficiency verdict when assessed', () => {
     render(
-      <AdsCard
+      <AdsVerdict
         status={{
           state: 'assessed',
           gapPct: 10.303,
@@ -57,20 +55,15 @@ describe('AdsCard', () => {
           aetStale: false,
           antStale: true,
         }}
-        now={NOW}
       />,
     )
     expect(screen.getByText('10.3%')).toBeInTheDocument()
     expect(screen.getByText(/aerobic deficiency/i)).toBeInTheDocument()
-    expect(screen.getByText(/148 bpm/)).toBeInTheDocument()
-    expect(screen.getByText(/165 bpm/)).toBeInTheDocument()
-    expect(screen.getByText(/33 d ago/)).toBeInTheDocument() // AeT 2026-06-01 08:00 vs NOW
-    expect(screen.getByText(/retest suggested/i)).toBeInTheDocument()
   })
 
   it('reports balance when under threshold', () => {
     render(
-      <AdsCard
+      <AdsVerdict
         status={{
           state: 'assessed',
           gapPct: 9.09,
@@ -80,7 +73,6 @@ describe('AdsCard', () => {
           aetStale: false,
           antStale: false,
         }}
-        now={NOW}
       />,
     )
     expect(screen.getByText(/balanced/i)).toBeInTheDocument()
