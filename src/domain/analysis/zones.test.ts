@@ -14,9 +14,13 @@ const antTest: AntTestResult = {
   createdAt: new Date('2026-07-01T10:00:00Z'), window: { startS: 0, endS: 3600 },
   antHr: 172, windowAvgHr: 170, windowAvgSpeed: null, windowAvgPower: null,
 }
+// A later AeT test on a different run.
+const aetTest2: AetTestResult = {
+  ...aetTest, id: 't-aet2', activityId: 'run2', testDate: new Date('2026-07-15T08:00:00Z'), aetHr: 158,
+}
 
 describe('resolveThresholds', () => {
-  it('uses the global value when no test on the run', () => {
+  it('uses the global value when no test exists at all', () => {
     const g = { aetHr: 145, antHr: 168, updatedAt: new Date('2026-07-06T00:00:00Z') }
     expect(resolveThresholds('run1', g, [])).toEqual({ aetHr: 145, antHr: 168 })
   })
@@ -24,17 +28,29 @@ describe('resolveThresholds', () => {
     const g = { aetHr: 145, antHr: 168, updatedAt: new Date('2026-07-06T00:00:00Z') }
     expect(resolveThresholds('run1', g, [aetTest, antTest])).toEqual({ aetHr: 150, antHr: 172 })
   })
-  it('a test on a different run does not override', () => {
+  it('a test on another run carries over as a fallback, above the manual global', () => {
     const g = { aetHr: 145, antHr: 168, updatedAt: new Date('2026-07-06T00:00:00Z') }
-    expect(resolveThresholds('other', g, [aetTest])).toEqual({ aetHr: 145, antHr: 168 })
+    // run1's AeT test drives 'other'; AnT has no test anywhere so falls to the global.
+    expect(resolveThresholds('other', g, [aetTest])).toEqual({ aetHr: 150, antHr: 168 })
+  })
+  it('the most recent test wins when the run has none of its own', () => {
+    // aetTest2 (2026-07-15) is newer than aetTest (2026-07-01); order must not matter.
+    expect(resolveThresholds('other', null, [aetTest, aetTest2])).toEqual({ aetHr: 158, antHr: null })
+    expect(resolveThresholds('other', null, [aetTest2, aetTest])).toEqual({ aetHr: 158, antHr: null })
+  })
+  it("the run's own test beats a newer test on another run", () => {
+    // run1 keeps its own 150 even though run2's test is more recent.
+    expect(resolveThresholds('run1', null, [aetTest, aetTest2])).toEqual({ aetHr: 150, antHr: null })
   })
   it('null global with no test yields nulls', () => {
     expect(resolveThresholds('run1', null, [])).toEqual({ aetHr: null, antHr: null })
   })
-  it('a saved test with null aetHr does not override the global aetHr', () => {
+  it('a test with null aetHr is ignored in favour of a valid one, else the global', () => {
     const nullAetTest: AetTestResult = { ...aetTest, aetHr: null }
     const g = { aetHr: 145, antHr: 168, updatedAt: new Date('2026-07-06T00:00:00Z') }
     expect(resolveThresholds('run1', g, [nullAetTest])).toEqual({ aetHr: 145, antHr: 168 })
+    // a valid test elsewhere still wins over the global despite the null one.
+    expect(resolveThresholds('run1', g, [nullAetTest, aetTest2])).toEqual({ aetHr: 158, antHr: 168 })
   })
 })
 

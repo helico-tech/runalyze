@@ -266,7 +266,7 @@ function Workspace({
           <ZonesPanel
             activity={activity}
             thresholds={thresholds}
-            tests={activityTests}
+            tests={results}
             onSave={saveThresholds}
           />
           <NotesPanel initialText={initialNote} onSave={saveNote} />

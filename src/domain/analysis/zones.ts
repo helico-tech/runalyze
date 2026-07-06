@@ -20,21 +20,30 @@ export type ZoneResult =
     }
   | { ok: false; reason: 'no-hr' | 'no-thresholds' | 'invalid-order' }
 
-/** Resolve a run's thresholds: a saved test on the run wins, else the global value. */
+const newest = <T extends { testDate: Date }>(xs: T[]): T | undefined =>
+  xs.reduce<T | undefined>(
+    (best, t) => (!best || t.testDate.getTime() > best.testDate.getTime() ? t : best),
+    undefined,
+  )
+
+/**
+ * Resolve a run's thresholds. Preference, per channel:
+ *   this run's own saved test → most recent saved test on any run → manual global → null.
+ * The cross-run fallback mirrors the ADS readout (spec §2.3): your latest test carries
+ * forward to later runs until you retest, rather than being stranded on the run it was taken on.
+ */
 export function resolveThresholds(
   activityId: string,
   global: Thresholds | null,
   tests: TestResult[],
 ): { aetHr: number | null; antHr: number | null } {
-  const aetTest = tests.find(
-    (t): t is AetTestResult => t.kind === 'aet' && t.activityId === activityId && t.aetHr !== null,
-  )
-  const antTest = tests.find(
-    (t): t is AntTestResult => t.kind === 'ant' && t.activityId === activityId,
-  )
+  const aets = tests.filter((t): t is AetTestResult => t.kind === 'aet' && t.aetHr !== null)
+  const ants = tests.filter((t): t is AntTestResult => t.kind === 'ant')
+  const aet = aets.find((t) => t.activityId === activityId) ?? newest(aets)
+  const ant = ants.find((t) => t.activityId === activityId) ?? newest(ants)
   return {
-    aetHr: aetTest?.aetHr ?? global?.aetHr ?? null,
-    antHr: antTest?.antHr ?? global?.antHr ?? null,
+    aetHr: aet?.aetHr ?? global?.aetHr ?? null,
+    antHr: ant?.antHr ?? global?.antHr ?? null,
   }
 }
 
