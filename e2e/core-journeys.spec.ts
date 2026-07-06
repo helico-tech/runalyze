@@ -37,10 +37,14 @@ test('a saved test drives the Trends screen', async ({ page }) => {
 
 test('notes persist across reload', async ({ page }) => {
   await openRun(page)
-  await page.getByRole('textbox').fill('tempo effort')
+  // Scoped by placeholder: the zones panel's threshold inputs are also
+  // (unnamed) textboxes on this screen, so a bare getByRole('textbox') is
+  // ambiguous now.
+  const notes = page.getByPlaceholder(/how did it feel/i)
+  await notes.fill('tempo effort')
   await page.waitForTimeout(700) // debounce
   await page.reload()
-  await expect(page.getByRole('textbox')).toHaveValue('tempo effort')
+  await expect(page.getByPlaceholder(/how did it feel/i)).toHaveValue('tempo effort')
 })
 
 test('export produces a PNG download', async ({ page }) => {
@@ -52,4 +56,16 @@ test('export produces a PNG download', async ({ page }) => {
     page.getByRole('button', { name: /download png/i }).click(),
   ])
   expect(download.suggestedFilename()).toMatch(/\.png$/)
+})
+
+test('setting thresholds populates the zones bar', async ({ page }) => {
+  await openRun(page)
+  // Before thresholds: the prompt is shown.
+  await expect(page.getByText(/set your thresholds/i)).toBeVisible()
+  await page.getByTestId('aet-input').fill('145')
+  await page.getByTestId('ant-input').fill('170')
+  await page.getByRole('button', { name: 'Save' }).click()
+  // After saving: the zone legend appears.
+  await expect(page.getByText('Below AeT')).toBeVisible()
+  await expect(page.getByText('Above AnT')).toBeVisible()
 })

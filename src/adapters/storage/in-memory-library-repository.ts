@@ -1,4 +1,4 @@
-import type { Activity, Exclusions, Note, Sector, TestResult } from '../../domain/model/types'
+import type { Activity, Exclusions, Note, Sector, TestResult, Thresholds } from '../../domain/model/types'
 import type { LibraryRepository } from '../../domain/ports/library-repository'
 
 /** Fallback for when IndexedDB is unavailable; also the fast test double. */
@@ -8,6 +8,7 @@ export class InMemoryLibraryRepository implements LibraryRepository {
   private readonly sectors = new Map<string, Sector>()
   private readonly testResults = new Map<string, TestResult>()
   private readonly notes = new Map<string, Note>()
+  private thresholds: Thresholds | null = null
 
   async saveActivity(activity: Activity, rawBytes: Uint8Array): Promise<void> {
     this.activities.set(activity.id, structuredClone(activity))
@@ -81,5 +82,13 @@ export class InMemoryLibraryRepository implements LibraryRepository {
   async getNote(activityId: string): Promise<Note | null> {
     const n = this.notes.get(activityId)
     return n ? structuredClone(n) : null
+  }
+
+  async getThresholds(): Promise<Thresholds | null> {
+    return this.thresholds ? structuredClone(this.thresholds) : null
+  }
+
+  async saveThresholds(t: Thresholds): Promise<void> {
+    this.thresholds = structuredClone(t)
   }
 }

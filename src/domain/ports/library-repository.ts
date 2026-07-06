@@ -1,4 +1,4 @@
-import type { Activity, Exclusions, Note, Sector, TestResult } from '../model/types'
+import type { Activity, Exclusions, Note, Sector, TestResult, Thresholds } from '../model/types'
 
 export interface LibraryRepository {
   saveActivity(activity: Activity, rawBytes: Uint8Array): Promise<void>
@@ -18,4 +18,7 @@ export interface LibraryRepository {
   deleteTestResult(id: string): Promise<void>
   saveNote(note: Note): Promise<void>
   getNote(activityId: string): Promise<Note | null>
+  /** Global manual thresholds; null when never saved. */
+  getThresholds(): Promise<Thresholds | null>
+  saveThresholds(t: Thresholds): Promise<void>
 }

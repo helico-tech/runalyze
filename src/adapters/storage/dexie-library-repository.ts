@@ -1,10 +1,15 @@
 import Dexie, { type Table } from 'dexie'
-import type { Activity, Exclusions, Note, Sector, TestResult } from '../../domain/model/types'
+import type { Activity, Exclusions, Note, Sector, TestResult, Thresholds } from '../../domain/model/types'
 import type { LibraryRepository } from '../../domain/ports/library-repository'
 
 interface RawFileRow {
   id: string
   bytes: Uint8Array
+}
+
+interface SettingsRow {
+  key: string
+  value: Thresholds
 }
 
 export interface DexieRepositoryOptions {
@@ -20,6 +25,7 @@ export class DexieLibraryRepository implements LibraryRepository {
   private readonly sectors: Table<Sector, string>
   private readonly testResults: Table<TestResult, string>
   private readonly notes: Table<Note, string>
+  private readonly settings: Table<SettingsRow, string>
 
   constructor(opts: DexieRepositoryOptions = {}) {
     const name = opts.name ?? 'runalyze'
@@ -33,11 +39,20 @@ export class DexieLibraryRepository implements LibraryRepository {
       testResults: 'id, activityId',
       notes: 'activityId',
     })
+    this.db.version(2).stores({
+      activities: 'id, startTime',
+      rawFiles: 'id',
+      sectors: 'id, activityId',
+      testResults: 'id, activityId',
+      notes: 'activityId',
+      settings: 'key',
+    })
     this.activities = this.db.table('activities')
     this.rawFiles = this.db.table('rawFiles')
     this.sectors = this.db.table('sectors')
     this.testResults = this.db.table('testResults')
     this.notes = this.db.table('notes')
+    this.settings = this.db.table('settings')
   }
 
   async saveActivity(activity: Activity, rawBytes: Uint8Array): Promise<void> {
@@ -113,5 +128,14 @@ export class DexieLibraryRepository implements LibraryRepository {
 
   async getNote(activityId: string): Promise<Note | null> {
     return (await this.notes.get(activityId)) ?? null
+  }
+
+  async getThresholds(): Promise<Thresholds | null> {
+    const row = await this.settings.get('thresholds')
+    return row?.value ?? null
+  }
+
+  async saveThresholds(t: Thresholds): Promise<void> {
+    await this.settings.put({ key: 'thresholds', value: t })
   }
 }

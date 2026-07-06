@@ -50,7 +50,7 @@ describe('ActivityScreen workspace', () => {
   it('persists a note through the repository', async () => {
     const { repo, parser, id } = await seed()
     renderAt({ repo, parser }, id)
-    const textbox = await screen.findByRole('textbox')
+    const textbox = await screen.findByPlaceholderText(/how did it feel/i)
     await userEvent.type(textbox, 'tempo run')
     await waitFor(async () => expect((await repo.getNote(id))?.text).toBe('tempo run'), {
       timeout: 2000,

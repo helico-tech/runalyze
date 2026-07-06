@@ -7,17 +7,19 @@ import type { LibraryRepository } from '../../../domain/ports/library-repository
 import { channelsPresent, efficiencyPresent } from '../../channels'
 import { ConfirmButton } from '../../components/confirm-button'
 import { useContainer } from '../../container-context'
-import { useTestResults } from '../../hooks'
+import { useTestResults, useThresholds } from '../../hooks'
 import { formatBpm, formatDuration } from '../../format'
 import { ChartStack } from './chart-stack'
 import { HoverReadout } from './hover-readout'
 import { LapTable } from './lap-table'
 import { NotesPanel } from './notes-panel'
+import { SplitsPanel } from './splits-panel'
 import { StatsPanel } from './stats-panel'
 import { TestPanel } from './test-panel'
 import { suggestTestWindow, TEST_WINDOW_ID, type TestKind } from './test-window'
 import { createWorkspaceStore, type WorkspaceStore } from './workspace-store'
 import { useWorkspacePersistence } from './use-workspace-persistence'
+import { ZonesPanel } from './zones-panel'
 import { cn } from '@/lib/utils'
 
 export function ActivityScreen() {
@@ -79,6 +81,7 @@ function Workspace({
 }) {
   const { renderer } = useContainer()
   const { results, refresh: refreshResults } = useTestResults()
+  const { thresholds, save: saveThresholds } = useThresholds()
   const activityTests = results.filter((r) => r.activityId === activity.id)
   const visible = useZustand(store, (s) => s.visible)
   const sectors = useZustand(store, (s) => s.sectors)
@@ -259,6 +262,13 @@ function Workspace({
             />
           )}
           <LapTable activity={activity} />
+          <SplitsPanel activity={activity} />
+          <ZonesPanel
+            activity={activity}
+            thresholds={thresholds}
+            tests={activityTests}
+            onSave={saveThresholds}
+          />
           <NotesPanel initialText={initialNote} onSave={saveNote} />
         </div>
       </div>
