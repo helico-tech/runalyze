@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { computeZones, resolveThresholds } from '../../../domain/analysis/zones'
 import type { Activity, TestResult, Thresholds } from '../../../domain/model/types'
 import { formatDuration } from '../../format'
@@ -92,6 +92,10 @@ function ThresholdEditor({
 }) {
   const [aetStr, setAetStr] = useState(aet === null ? '' : String(aet))
   const [antStr, setAntStr] = useState(ant === null ? '' : String(ant))
+  useEffect(() => {
+    setAetStr(aet === null ? '' : String(aet))
+    setAntStr(ant === null ? '' : String(ant))
+  }, [aet, ant])
   const parse = (s: string): number | null => {
     const n = Number.parseInt(s, 10)
     return Number.isFinite(n) ? n : null

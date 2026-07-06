@@ -38,4 +38,19 @@ describe('ZonesPanel', () => {
     await userEvent.click(screen.getByRole('button', { name: /save/i }))
     expect(onSave).toHaveBeenCalledWith(145, 168)
   })
+
+  it('re-syncs input fields when thresholds arrive asynchronously', () => {
+    const onSave = vi.fn()
+    const { rerender } = render(
+      <ZonesPanel activity={hrActivity()} thresholds={null} tests={[]} onSave={onSave} />,
+    )
+    expect((screen.getByTestId('aet-input') as HTMLInputElement).value).toBe('')
+    expect((screen.getByTestId('ant-input') as HTMLInputElement).value).toBe('')
+
+    const thresholds = { aetHr: 140, antHr: 170, updatedAt: new Date('2026-07-06T00:00:00Z') }
+    rerender(<ZonesPanel activity={hrActivity()} thresholds={thresholds} tests={[]} onSave={onSave} />)
+
+    expect((screen.getByTestId('aet-input') as HTMLInputElement).value).toBe('140')
+    expect((screen.getByTestId('ant-input') as HTMLInputElement).value).toBe('170')
+  })
 })
