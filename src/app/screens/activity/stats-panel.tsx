@@ -1,10 +1,11 @@
 import { computeDecoupling } from '../../../domain/analysis/decoupling'
+import { gradeAdjustedSpeed } from '../../../domain/analysis/grade-adjusted-pace'
 import { sectorStats } from '../../../domain/analysis/sector-stats'
 import { windowStats } from '../../../domain/analysis/stats'
 import { nonExcludedRange } from '../../../domain/model/series'
 import type { Activity, Exclusions, Sector, TimeRange } from '../../../domain/model/types'
 import { CHANNELS } from '../../channels'
-import { formatDuration } from '../../format'
+import { formatDuration, formatPace } from '../../format'
 
 function decouplingText(a: Activity, range: TimeRange, drift: 'speed' | 'power'): string {
   const out = a.channels[drift]
@@ -72,6 +73,15 @@ export function StatsPanel({
             <ChannelRows a={activity} range={whole} />
           </tbody>
         </table>
+        {(() => {
+          const gap = gradeAdjustedSpeed(activity, whole)
+          return gap === null ? null : (
+            <p className="mt-2 flex justify-between text-[10px] uppercase tracking-widest text-ink-muted">
+              <span>GAP</span>
+              <span className="tabular-nums text-ch-pace">{formatPace(gap)}</span>
+            </p>
+          )
+        })()}
       </section>
 
       {selected && <SectorStatsBlock activity={activity} range={selected.range} />}

@@ -3,6 +3,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { Sector } from '../../../domain/model/types'
+import { makeSeries } from '../../../domain/model/series'
 import { syntheticActivity, syntheticSeries } from '../../../domain/testing/synthetic'
 import { StatsPanel } from './stats-panel'
 
@@ -51,5 +52,19 @@ describe('StatsPanel', () => {
     expect(screen.getByText(/decoupling/i)).toBeInTheDocument()
     expect(screen.getByText('5.0%')).toBeInTheDocument()
     expect(screen.getByText(/1st half/i)).toBeInTheDocument()
+  })
+
+  it('shows a GAP pace line when distance and altitude are present', () => {
+    const t = Array.from({ length: 301 }, (_, i) => i)
+    const a = syntheticActivity({
+      durationS: 301,
+      channels: {
+        distance: makeSeries(t, t.map((s) => s * 3)),
+        altitude: makeSeries(t, t.map(() => 100)),
+        heartRate: makeSeries(t, t.map(() => 150)),
+      },
+    })
+    render(<StatsPanel activity={a} sectors={[]} exclusions={a.exclusions} selectedSectorId={null} />)
+    expect(screen.getByText('GAP')).toBeInTheDocument()
   })
 })
