@@ -13,6 +13,7 @@ import { ChartStack } from './chart-stack'
 import { HoverReadout } from './hover-readout'
 import { LapTable } from './lap-table'
 import { NotesPanel } from './notes-panel'
+import { SplitsPanel } from './splits-panel'
 import { StatsPanel } from './stats-panel'
 import { TestPanel } from './test-panel'
 import { suggestTestWindow, TEST_WINDOW_ID, type TestKind } from './test-window'
@@ -259,6 +260,7 @@ function Workspace({
             />
           )}
           <LapTable activity={activity} />
+          <SplitsPanel activity={activity} />
           <NotesPanel initialText={initialNote} onSave={saveNote} />
         </div>
       </div>
