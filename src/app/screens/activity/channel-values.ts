@@ -6,6 +6,7 @@ export interface HoverValue {
   key: DisplayChannel
   label: string
   colorHex: string
+  colorVar: string
   text: string
 }
 
@@ -16,7 +17,13 @@ export function channelValuesAt(activity: Activity, tS: number): HoverValue[] {
     if (!series || series.t.length === 0) continue
     const i = nearestIndex(series.t, tS)
     if (i < 0) continue
-    out.push({ key: c.key, label: c.label, colorHex: c.colorHex, text: c.format(series.v[i]!) })
+    out.push({
+      key: c.key,
+      label: c.label,
+      colorHex: c.colorHex,
+      colorVar: c.colorVar,
+      text: c.format(series.v[i]!),
+    })
   }
   const hr = activity.channels.heartRate
   if (hr && hr.t.length > 0) {
@@ -28,7 +35,13 @@ export function channelValuesAt(activity: Activity, tS: number): HoverValue[] {
       const h = hr.v[hi]!
       const o = output.v[oi]!
       if (!Number.isFinite(h) || h <= 0 || !Number.isFinite(o)) continue
-      out.push({ key: e.key, label: e.label, colorHex: e.colorHex, text: e.format((e.scale * o) / h) })
+      out.push({
+        key: e.key,
+        label: e.label,
+        colorHex: e.colorHex,
+        colorVar: e.colorVar,
+        text: e.format((e.scale * o) / h),
+      })
     }
   }
   return out

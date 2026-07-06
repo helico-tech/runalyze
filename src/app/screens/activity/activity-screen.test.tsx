@@ -114,8 +114,8 @@ describe('ActivityScreen workspace', () => {
     await userEvent.click(await screen.findByRole('button', { name: /save result/i }))
     // the saved test appears in the workspace's saved-tests row
     expect(await screen.findByText(/saved tests/i)).toBeInTheDocument()
-    await userEvent.click(await screen.findByRole('button', { name: 'delete' }))
-    await userEvent.click(await screen.findByRole('button', { name: 'confirm' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Delete' }))
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirm' }))
     await waitFor(async () => expect(await repo.listTestResults()).toHaveLength(0))
   })
 })

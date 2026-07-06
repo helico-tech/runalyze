@@ -131,112 +131,118 @@ function Workspace({
 
   return (
     <div className="mx-auto max-w-[1600px] space-y-4">
-      <Link to="/" className="font-mono text-xs uppercase tracking-widest text-ink-muted">
-        ← library
+      <Link
+        to="/"
+        className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-fg-3 transition-colors hover:text-fg"
+      >
+        ← Library
       </Link>
 
       {/* Controls + hover readout stay pinned below the sticky header while charts scroll. */}
       <div className="sticky top-14 z-20 space-y-3 bg-bg pb-3">
         <div className="flex flex-wrap items-center gap-2">
-          {present.map((c) => (
-          <button
-            key={c.key}
-            type="button"
-            onClick={() => store.getState().toggleChannel(c.key)}
-            className={cn(
-              'rounded border px-2 py-1 font-mono text-xs',
-              visible.has(c.key) ? 'border-line bg-surface-2' : 'border-line/50 text-ink-muted',
-            )}
-            style={visible.has(c.key) ? { color: c.colorHex } : undefined}
-          >
-            {c.label}
-          </button>
-        ))}
-        {effPresent.map((e) => (
-          <button
-            key={e.key}
-            type="button"
-            onClick={() => store.getState().toggleChannel(e.key)}
-            className={cn(
-              'rounded border px-2 py-1 font-mono text-xs',
-              visible.has(e.key) ? 'border-line bg-surface-2' : 'border-line/50 text-ink-muted',
-            )}
-            style={visible.has(e.key) ? { color: e.colorHex } : undefined}
-          >
-            {e.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex items-center gap-2 font-mono text-xs text-ink-muted">
-        analysis
-        {(['aet', 'ant'] as const).map((kind) => (
-          <button
-            key={kind}
-            type="button"
-            disabled={suggestions[kind] === null}
-            title={
-              suggestions[kind] === null
-                ? 'This run is too short or has no heart rate for this test'
-                : undefined
-            }
-            onClick={() => beginTest(kind)}
-            className={cn(
-              'rounded border border-line px-2 py-1',
-              activeTest === kind ? 'bg-surface-2 text-ink' : 'text-ink-muted',
-              suggestions[kind] === null && 'opacity-40',
-            )}
-          >
-            {kind === 'aet' ? 'AeT test' : 'AnT test'}
-          </button>
-        ))}
-      </div>
-
-      {activityTests.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
-          <span className="text-ink-muted">saved tests</span>
-          {activityTests.map((r) => (
-            <span
-              key={r.id}
-              className="flex items-center gap-2 rounded border border-line px-2 py-1"
-            >
-              <span className="uppercase text-ink-muted">{r.kind}</span>
-              <span className="tabular-nums">{testKeyValue(r)}</span>
-              <ConfirmButton
-                label="delete"
-                confirmLabel="confirm"
-                onConfirm={() => deleteTest(r.id)}
-              />
-            </span>
-          ))}
+          {[...present, ...effPresent].map((c) => {
+            const on = visible.has(c.key)
+            return (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => store.getState().toggleChannel(c.key)}
+                className={cn(
+                  'flex h-8 items-center gap-2 rounded-lg border px-3 text-[12.5px] font-medium transition-colors',
+                  on
+                    ? 'border-line-2 bg-panel-2'
+                    : 'border-line text-fg-3 hover:border-line-2 hover:text-fg-2',
+                )}
+                style={on ? { color: c.colorVar } : undefined}
+              >
+                <span
+                  className="h-1.5 w-1.5 flex-none rounded-full"
+                  style={{ background: on ? c.colorVar : 'var(--fg-3)' }}
+                />
+                {c.label}
+              </button>
+            )
+          })}
         </div>
-      )}
 
-      {userSectors.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {userSectors.map((s) => (
-            <span
-              key={s.id}
+        <div className="flex items-center gap-2 text-[12.5px]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-3">
+            Analysis
+          </span>
+          {(['aet', 'ant'] as const).map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              disabled={suggestions[kind] === null}
+              title={
+                suggestions[kind] === null
+                  ? 'This run is too short or has no heart rate for this test'
+                  : undefined
+              }
+              onClick={() => beginTest(kind)}
               className={cn(
-                'flex items-center gap-2 rounded border px-2 py-1 font-mono text-xs',
-                s.id === selectedSectorId ? 'border-focus text-ink' : 'border-line text-ink-muted',
+                'flex h-8 items-center rounded-lg border px-3 font-medium transition-colors',
+                activeTest === kind
+                  ? 'border-accent bg-accent-soft text-accent'
+                  : 'border-line text-fg-2 hover:border-line-2 hover:text-fg',
+                suggestions[kind] === null && 'opacity-40',
               )}
             >
-              <button type="button" onClick={() => store.getState().select(s.id)}>
-                {formatDuration(s.range.startS)}–{formatDuration(s.range.endS)}
-              </button>
-              <button
-                type="button"
-                aria-label="delete sector"
-                onClick={() => store.getState().removeSector(s.id)}
-                className="text-ink-muted hover:text-danger"
-              >
-                ×
-              </button>
-            </span>
+              {kind === 'aet' ? 'AeT test' : 'AnT test'}
+            </button>
           ))}
         </div>
-      )}
+
+        {activityTests.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 text-[12.5px]">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-3">
+              Saved tests
+            </span>
+            {activityTests.map((r) => (
+              <span
+                key={r.id}
+                className="flex h-8 items-center gap-2 rounded-lg border border-line bg-panel px-3"
+              >
+                <span className="rounded bg-accent-soft px-1.5 py-0.5 text-[10.5px] font-semibold uppercase text-accent">
+                  {r.kind}
+                </span>
+                <span className="font-mono tabular-nums text-fg-2">{testKeyValue(r)}</span>
+                <ConfirmButton
+                  label="Delete"
+                  confirmLabel="Confirm"
+                  onConfirm={() => deleteTest(r.id)}
+                />
+              </span>
+            ))}
+          </div>
+        )}
+
+        {userSectors.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {userSectors.map((s) => (
+              <span
+                key={s.id}
+                className={cn(
+                  'flex h-8 items-center gap-2 rounded-lg border px-3 font-mono text-[12px]',
+                  s.id === selectedSectorId ? 'border-accent text-accent' : 'border-line text-fg-2',
+                )}
+              >
+                <button type="button" onClick={() => store.getState().select(s.id)}>
+                  {formatDuration(s.range.startS)}–{formatDuration(s.range.endS)}
+                </button>
+                <button
+                  type="button"
+                  aria-label="delete sector"
+                  onClick={() => store.getState().removeSector(s.id)}
+                  className="text-fg-3 transition-colors hover:text-danger"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
 
         <HoverReadout activity={activity} store={store} />
       </div>

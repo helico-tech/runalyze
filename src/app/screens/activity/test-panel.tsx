@@ -55,7 +55,8 @@ export function TestPanel({
   let evaluation: AetEvaluation | AntEvaluation | null = null
   let error: string | null = null
   try {
-    evaluation = kind === 'aet' ? evaluateAetTest(activity, window) : evaluateAntTest(activity, window)
+    evaluation =
+      kind === 'aet' ? evaluateAetTest(activity, window) : evaluateAntTest(activity, window)
   } catch (e) {
     error = e instanceof Error ? e.message : String(e)
   }
@@ -86,12 +87,16 @@ export function TestPanel({
   const showAccept = aet !== null && !aet.atAet && aet.valid
 
   return (
-    <div className="space-y-4 rounded-lg border border-line bg-surface p-4 font-mono text-sm">
+    <div className="space-y-4 rounded-xl border border-line bg-panel p-4 font-mono text-sm">
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-semibold uppercase tracking-widest text-ink-muted">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-3">
           {kind === 'aet' ? 'AeT test' : 'AnT test'} · {formatDuration(window.endS - window.startS)}
         </h3>
-        <button type="button" onClick={onCancel} className="text-ink-muted hover:text-ink">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-fg-3 transition-colors hover:text-fg"
+        >
           ×
         </button>
       </div>
@@ -127,7 +132,12 @@ export function TestPanel({
             Export
           </Button>
         )}
-        <Button size="sm" disabled={!evaluation || !evaluation.valid} onClick={save}>
+        <Button
+          variant="primary"
+          size="sm"
+          disabled={!evaluation || !evaluation.valid}
+          onClick={save}
+        >
           Save result
         </Button>
       </div>

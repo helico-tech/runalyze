@@ -1,37 +1,147 @@
 @import 'tailwindcss';
 
-@theme {
-  --font-sans: 'Inter Variable', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+/*
+ * Design language: "Relay" job-queue console, adapted for Runalyze.
+ * Raw palette values live on :root (dark, default) and :root[data-theme='light'].
+ * @theme inline maps Tailwind color tokens onto those raw vars, so every utility
+ * (bg-panel, text-fg-2, border-line, …) is theme-reactive with no markup churn.
+ */
 
-  --color-bg: #0b0e14;
-  --color-surface: #131720;
-  --color-surface-2: #1a2029;
-  --color-line: #232b36;
-  --color-ink: #e6ebf0;
-  --color-ink-muted: #8a97a5;
+:root {
+  /* surfaces */
+  --bg: #08080a;
+  --panel: #111114;
+  --panel-2: #161619;
+  --sunk: #0d0d10;
+  /* borders */
+  --bd: #232329;
+  --bd-2: #2f2f37;
+  /* text */
+  --fg: #f3f3f6;
+  --fg-2: #9c9ca7;
+  --fg-3: #5f5f6a;
+  /* accent */
+  --accent: #7c74ff;
+  --accent-soft: #1c1a33;
+  /* semantic (verdict) */
+  --ok: #35c07a;
+  --caution: #e0a13a;
+  --danger: #f16a6a;
+  --focus: #5b8bf5;
+  /* chart channels — Runalyze domain identity */
+  --ch-hr: #ff6b6b;
+  --ch-pace: #4cc9f0;
+  --ch-power: #a78bfa;
+  --ch-cadence: #ffc53d;
+  --ch-altitude: #6bcb77;
+  --ch-ef-pace: #2dd4bf;
+  --ch-ef-power: #c084fc;
+}
 
-  --color-ch-hr: #ff6b6b;
-  --color-ch-pace: #4cc9f0;
-  --color-ch-power: #a78bfa;
-  --color-ch-cadence: #ffc53d;
-  --color-ch-altitude: #6bcb77;
+:root[data-theme='light'] {
+  --bg: #f6f6f8;
+  --panel: #ffffff;
+  --panel-2: #fbfbfc;
+  --sunk: #f1f1f4;
+  --bd: #e7e7ea;
+  --bd-2: #d8d8dd;
+  --fg: #191920;
+  --fg-2: #5d5d68;
+  --fg-3: #9a9aa4;
+  --accent: #5148e0;
+  --accent-soft: #edecfb;
+  --ok: #12874a;
+  --caution: #bd7208;
+  --danger: #d43a3a;
+  --focus: #2f66e0;
+  --ch-hr: #d43a3a;
+  --ch-pace: #0e8bb0;
+  --ch-power: #7c3aed;
+  --ch-cadence: #bd7208;
+  --ch-altitude: #12874a;
+  --ch-ef-pace: #0d9488;
+  --ch-ef-power: #7c3aed;
+}
 
-  --color-ok: #3dd68c;
-  --color-caution: #f5a524;
-  --color-danger: #f0525f;
-  --color-focus: #5b9dff;
+@theme inline {
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* surfaces */
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-sunk: var(--sunk);
+  /* borders */
+  --color-line: var(--bd);
+  --color-line-2: var(--bd-2);
+  /* text */
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-fg-3: var(--fg-3);
+  /* accent */
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+
+  /* legacy aliases — kept so pre-existing markup keeps working */
+  --color-surface: var(--panel);
+  --color-surface-2: var(--panel-2);
+  --color-ink: var(--fg);
+  --color-ink-muted: var(--fg-2);
+
+  /* semantic */
+  --color-ok: var(--ok);
+  --color-caution: var(--caution);
+  --color-danger: var(--danger);
+  --color-focus: var(--focus);
+
+  /* chart channels */
+  --color-ch-hr: var(--ch-hr);
+  --color-ch-pace: var(--ch-pace);
+  --color-ch-power: var(--ch-power);
+  --color-ch-cadence: var(--ch-cadence);
+  --color-ch-altitude: var(--ch-altitude);
 }
 
 @layer base {
-  html {
+  :root {
     color-scheme: dark;
   }
+  :root[data-theme='light'] {
+    color-scheme: light;
+  }
   body {
-    @apply bg-bg font-sans text-ink antialiased;
+    @apply bg-bg font-sans text-fg antialiased;
+    font-feature-settings: 'zero' 1;
   }
   :focus-visible {
-    outline: 2px solid var(--color-focus);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
   }
+}
+
+/* dot pulse for live/running status indicators */
+@keyframes dotpulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.28;
+  }
+}
+
+/* scrollbars styled to the palette (webkit) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bd-2);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-3);
 }

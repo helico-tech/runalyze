@@ -8,7 +8,7 @@ export function TrendChart({
   title,
   unit,
   points,
-  colorHex,
+  color,
   yMin,
   yMax,
   threshold,
@@ -16,7 +16,8 @@ export function TrendChart({
   title: string
   unit: string
   points: Point[]
-  colorHex: string
+  /** any CSS color, incl. theme vars like `var(--ch-hr)` */
+  color: string
   yMin?: number
   yMax?: number
   threshold?: number
@@ -32,14 +33,12 @@ export function TrendChart({
       : undefined
 
   return (
-    <div className="rounded-lg border border-line bg-surface p-3">
-      <h3 className="mb-1 font-mono text-[10px] uppercase tracking-widest text-ink-muted">
-        {title} <span className="text-ink-muted/70">{unit}</span>
+    <div className="rounded-xl border border-line bg-panel p-4">
+      <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-3">
+        {title} <span className="text-fg-3/70">{unit}</span>
       </h3>
       {points.length === 0 ? (
-        <p className="flex h-[140px] items-center justify-center text-xs text-ink-muted">
-          No data yet
-        </p>
+        <p className="flex h-[140px] items-center justify-center text-xs text-fg-3">No data yet</p>
       ) : (
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label={`${title} trend`}>
           {thresholdY !== undefined && (
@@ -48,17 +47,17 @@ export function TrendChart({
               x2={W - PAD}
               y1={thresholdY}
               y2={thresholdY}
-              stroke="#f0525f"
+              stroke="var(--danger)"
               strokeDasharray="3 3"
               strokeWidth={1}
               opacity={0.6}
             />
           )}
           {scaled.length > 1 && (
-            <polyline points={polyline(scaled)} fill="none" stroke={colorHex} strokeWidth={1.5} />
+            <polyline points={polyline(scaled)} fill="none" stroke={color} strokeWidth={1.5} />
           )}
           {scaled.map((s, i) => (
-            <circle key={i} cx={s.x} cy={s.y} r={3} fill={colorHex} />
+            <circle key={i} cx={s.x} cy={s.y} r={3} fill={color} />
           ))}
         </svg>
       )}

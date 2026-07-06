@@ -50,7 +50,7 @@ export function LibraryScreen() {
     <div className="mx-auto max-w-5xl space-y-8">
       <ImportDropzone onFiles={(files) => void handleFiles(files)} />
       <section>
-        <h2 className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-ink-muted">
+        <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-3">
           Runs
         </h2>
         <RunList

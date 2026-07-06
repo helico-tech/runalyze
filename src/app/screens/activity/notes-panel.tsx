@@ -25,9 +25,9 @@ export function NotesPanel({
 
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between">
-        <h3 className="text-[10px] uppercase tracking-widest text-ink-muted">Notes</h3>
-        {saved && <span className="text-[10px] text-ok">saved</span>}
+      <div className="mb-2 flex items-center justify-between">
+        <h3 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-3">Notes</h3>
+        {saved && <span className="text-[10.5px] font-medium text-ok">saved</span>}
       </div>
       <textarea
         value={text}
@@ -36,7 +36,7 @@ export function NotesPanel({
           setSaved(false)
         }}
         placeholder="How did it feel? Conditions, RPE, anything worth remembering."
-        className="h-32 w-full resize-y rounded border border-line bg-surface p-2 text-sm text-ink placeholder:text-ink-muted focus:outline-none"
+        className="h-32 w-full resize-y rounded-xl border border-line bg-panel p-3 text-sm text-fg placeholder:text-fg-3 focus:outline-none"
       />
     </div>
   )

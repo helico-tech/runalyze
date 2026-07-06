@@ -10,13 +10,7 @@ import { AdsExportCard } from '../../export/export-card'
 
 // Slim current-status readout for the Trends screen. The gap-over-time chart and
 // test log below carry the history, so this stays to the verdict + export only.
-export function AdsVerdict({
-  status,
-  renderer,
-}: {
-  status: AdsStatus
-  renderer?: ImageRenderer
-}) {
+export function AdsVerdict({ status, renderer }: { status: AdsStatus; renderer?: ImageRenderer }) {
   const [showExport, setShowExport] = useState(false)
 
   if (status.state === 'no-tests') return null
@@ -24,7 +18,7 @@ export function AdsVerdict({
   return (
     <Card>
       <CardContent className="flex flex-wrap items-center gap-x-6 gap-y-3 py-4">
-        <span className="font-mono text-xs font-semibold uppercase tracking-widest text-ink-muted">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-3">
           ADS · current
         </span>
         {status.state === 'assessed' ? (
@@ -33,9 +27,13 @@ export function AdsVerdict({
               {status.gapPct.toFixed(1)}%
             </span>
             {status.ads ? (
-              <Badge variant="danger">aerobic deficiency</Badge>
+              <Badge variant="danger" dot>
+                aerobic deficiency
+              </Badge>
             ) : (
-              <Badge variant="ok">balanced</Badge>
+              <Badge variant="ok" dot>
+                balanced
+              </Badge>
             )}
             <p className="min-w-[12rem] flex-1 text-sm text-ink-muted">
               {status.ads

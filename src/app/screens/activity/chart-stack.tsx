@@ -5,11 +5,12 @@ import { efficiencySeries, rollingMean } from '../../../domain/analysis/efficien
 import { displayLaps } from '../../../domain/model/laps'
 import type { Activity, Exclusions, Sector, Series } from '../../../domain/model/types'
 import { CHANNELS, EFFICIENCY } from '../../channels'
+import { useThemeStore } from '../../theme'
 import type { WorkspaceStore } from './workspace-store'
 
 interface PaneSpec {
   label: string
-  colorHex: string
+  colorVar: string
   invert: boolean
   format: (v: number) => string
   series: Series
@@ -47,6 +48,7 @@ interface Drag {
 
 export function ChartStack({ activity, store }: { activity: Activity; store: WorkspaceStore }) {
   const visible = useZustand(store, (s) => s.visible)
+  const theme = useThemeStore((s) => s.theme)
   const containerRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef<Drag | null>(null)
 
@@ -64,6 +66,17 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
     const panes: uPlot[] = []
     const domainMax = activity.durationS
 
+    // Resolve theme tokens once per build; the effect re-runs on theme change so
+    // uPlot (which paints to canvas and can't read CSS vars) gets fresh colors.
+    const cs = getComputedStyle(document.documentElement)
+    const cvar = (name: string) => cs.getPropertyValue(name).trim()
+    const resolve = (c: string) => (c.startsWith('var(') ? cvar(c.slice(4, -1).trim()) : c)
+    const axisStroke = cvar('--fg-2')
+    const gridStroke = cvar('--bd')
+    const isLight = theme === 'light'
+    const excludeFill = isLight ? 'rgba(120,120,132,0.20)' : 'rgba(8,8,10,0.62)'
+    const splitStroke = isLight ? 'rgba(25,25,32,0.35)' : 'rgba(243,243,246,0.35)'
+
     const overlay = (u: uPlot) => {
       const { sectors, exclusions, selectedSectorId } = store.getState()
       const ctx = u.ctx
@@ -79,7 +92,7 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
       }
       ctx.save()
       // excluded shading (warmup / cooldown) + trim grips
-      ctx.fillStyle = 'rgba(11,14,20,0.66)'
+      ctx.fillStyle = excludeFill
       ctx.fillRect(xpos(0), top, xpos(exclusions.warmupEndS) - xpos(0), h)
       ctx.fillRect(
         xpos(exclusions.cooldownStartS),
@@ -100,7 +113,7 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
           ctx.strokeStyle = 'rgba(61,214,140,0.6)'
           ctx.strokeRect(x0, top, x1 - x0, h)
           const mid = xpos((s.range.startS + s.range.endS) / 2)
-          ctx.strokeStyle = 'rgba(230,235,240,0.35)'
+          ctx.strokeStyle = splitStroke
           ctx.beginPath()
           ctx.moveTo(mid, top)
           ctx.lineTo(mid, top + h)
@@ -213,14 +226,14 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
     const paneSpecs: PaneSpec[] = [
       ...rawMetas.map((m) => ({
         label: m.label,
-        colorHex: m.colorHex,
+        colorVar: m.colorVar,
         invert: m.invert,
         format: m.format,
         series: activity.channels[m.sourceChannel]!,
       })),
       ...effMetas.map((e) => ({
         label: e.label,
-        colorHex: e.colorHex,
+        colorVar: e.colorVar,
         invert: false,
         format: e.format,
         series: rollingMean(
@@ -242,15 +255,15 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
         scales: { x: { time: false, min: 0, max: domainMax }, y: { dir: spec.invert ? -1 : 1 } },
         legend: { show: false },
         axes: [
-          { stroke: '#8a97a5', grid: { stroke: '#232b36' }, ticks: { stroke: '#232b36' } },
+          { stroke: axisStroke, grid: { stroke: gridStroke }, ticks: { stroke: gridStroke } },
           {
-            stroke: '#8a97a5',
-            grid: { stroke: '#232b36' },
-            ticks: { stroke: '#232b36' },
+            stroke: axisStroke,
+            grid: { stroke: gridStroke },
+            ticks: { stroke: gridStroke },
             values: (_u, splits) => splits.map((v) => spec.format(v)),
           },
         ],
-        series: [{}, { stroke: spec.colorHex, width: 1.25, points: { show: false } }],
+        series: [{}, { stroke: resolve(spec.colorVar), width: 1.25, points: { show: false } }],
         plugins: [{ hooks: { draw: overlay } }],
       }
       const u = new uPlot(opts, data, paneEl)
@@ -280,9 +293,9 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
       panes.forEach((p) => p.destroy()) // destroy() also unsubscribes from the sync group
       container.replaceChildren()
     }
-    // rebuild when the activity or visible-channel set changes
+    // rebuild when the activity, visible-channel set, or theme changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activity, store, paneKeys])
+  }, [activity, store, paneKeys, theme])
 
   if (!canvasAvailable) {
     return (
@@ -290,7 +303,7 @@ export function ChartStack({ activity, store }: { activity: Activity; store: Wor
         {[...rawMetas, ...effMetas].map((m) => (
           <div
             key={m.key}
-            className="flex h-[180px] items-center justify-center rounded border border-line bg-surface text-xs text-ink-muted"
+            className="flex h-[180px] items-center justify-center rounded-xl border border-line bg-panel text-xs text-fg-3"
           >
             {m.label} chart
           </div>

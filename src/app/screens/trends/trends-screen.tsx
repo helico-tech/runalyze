@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { assessAds } from '../../../domain/analysis/ads-assessment'
 import { ADS_GAP_THRESHOLD_PCT } from '../../../domain/analysis/protocol-constants'
 import type { AetTestResult, AntTestResult, TestResult } from '../../../domain/model/types'
+import { Badge } from '@/components/ui/badge'
 import { ConfirmButton } from '../../components/confirm-button'
 import { useContainer } from '../../container-context'
 import { useTestResults } from '../../hooks'
@@ -67,43 +68,50 @@ export function TrendsScreen() {
     <div className="mx-auto max-w-5xl space-y-8">
       <AdsVerdict status={adsStatus} renderer={renderer} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <TrendChart title="AeT HR" unit="bpm" points={aetHr} colorHex="#ff6b6b" />
-        <TrendChart title="AnT HR" unit="bpm" points={antHr} colorHex="#ff6b6b" />
-        <TrendChart title="AeT decoupling" unit="%" points={decoupling} colorHex="#4cc9f0" />
+        <TrendChart title="AeT HR" unit="bpm" points={aetHr} color="var(--ch-hr)" />
+        <TrendChart title="AnT HR" unit="bpm" points={antHr} color="var(--ch-hr)" />
+        <TrendChart title="AeT decoupling" unit="%" points={decoupling} color="var(--ch-pace)" />
         <TrendChart
           title="ADS gap"
           unit="%"
           points={gap}
-          colorHex="#a78bfa"
+          color="var(--ch-power)"
           yMin={0}
           threshold={ADS_GAP_THRESHOLD_PCT}
         />
       </div>
 
       <section>
-        <h2 className="mb-2 font-mono text-xs font-semibold uppercase tracking-widest text-ink-muted">
+        <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-3">
           Test log
         </h2>
-        <table className="w-full border-collapse font-mono text-sm">
-          <tbody>
-            {log.map((r) => (
-              <tr key={r.id} className="border-b border-line/50">
-                <td className="py-2 pr-4 text-ink-muted">{formatDate(r.testDate)}</td>
-                <td className="py-2 pr-4 uppercase">{r.kind}</td>
-                <td className="py-2 pr-4 tabular-nums">{keyValue(r)}</td>
-                <td className="py-2 text-right">
-                  <ConfirmButton
-                    label="Delete"
-                    confirmLabel="Confirm"
-                    onConfirm={() => {
-                      void repo.deleteTestResult(r.id).then(refresh)
-                    }}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="overflow-hidden rounded-xl border border-line bg-panel">
+          <table className="w-full border-collapse text-sm">
+            <tbody>
+              {log.map((r) => (
+                <tr
+                  key={r.id}
+                  className="border-b border-line last:border-0 transition-colors hover:bg-sunk"
+                >
+                  <td className="px-4 py-2.5 font-mono text-fg-3">{formatDate(r.testDate)}</td>
+                  <td className="px-4 py-2.5">
+                    <Badge variant="accent">{r.kind.toUpperCase()}</Badge>
+                  </td>
+                  <td className="px-4 py-2.5 font-mono tabular-nums text-fg-2">{keyValue(r)}</td>
+                  <td className="px-4 py-2.5 text-right">
+                    <ConfirmButton
+                      label="Delete"
+                      confirmLabel="Confirm"
+                      onConfirm={() => {
+                        void repo.deleteTestResult(r.id).then(refresh)
+                      }}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </div>
   )

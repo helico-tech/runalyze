@@ -25,13 +25,17 @@ export function ImportDropzone({ onFiles }: { onFiles: (files: File[]) => void }
         onDragLeave={() => setActive(false)}
         onDrop={handleDrop}
         className={cn(
-          'flex h-full min-h-32 w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line text-center transition-colors',
-          active ? 'border-focus bg-surface-2' : 'hover:border-ink-muted hover:bg-surface',
+          'flex h-full min-h-36 w-full flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed text-center transition-colors',
+          active
+            ? 'border-accent bg-accent-soft'
+            : 'border-line-2 hover:border-fg-3 hover:bg-panel',
         )}
       >
-        <span className="font-mono text-xs uppercase tracking-widest text-ink-muted">import</span>
-        <span className="text-sm text-ink">Drop .fit or .zip files</span>
-        <span className="text-xs text-ink-muted">or click to browse</span>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-fg-3">
+          Import
+        </span>
+        <span className="text-[15px] font-medium text-fg">Drop .fit or .zip files</span>
+        <span className="text-xs text-fg-3">or click to browse</span>
       </button>
       <input
         ref={inputRef}

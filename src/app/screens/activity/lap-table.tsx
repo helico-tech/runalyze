@@ -9,44 +9,49 @@ export function LapTable({ activity }: { activity: Activity }) {
 
   return (
     <section>
-      <h3 className="mb-1 font-mono text-[10px] uppercase tracking-widest text-ink-muted">Laps</h3>
-      <table className="w-full border-collapse font-mono text-sm tabular-nums">
-        <thead>
-          <tr className="border-b border-line text-left text-[10px] uppercase tracking-widest text-ink-muted">
-            <th className="py-1 pr-3 font-medium">lap</th>
-            <th className="py-1 pr-3 font-medium">type</th>
-            <th className="py-1 pr-3 font-medium">time</th>
-            <th className="py-1 pr-3 font-medium">dist</th>
-            <th className="py-1 pr-3 font-medium">hr</th>
-            <th className="py-1 pr-3 font-medium">pace</th>
-            <th className="py-1 font-medium">pwr</th>
-          </tr>
-        </thead>
-        <tbody>
-          {laps.map((lap, i) => {
-            const s = rangeSummary(activity, lap.range)
-            return (
-              <tr key={lap.index} className="border-b border-line/40">
-                <td className="py-1 pr-3 text-ink-muted">L{i + 1}</td>
-                <td className="py-1 pr-3">
-                  <span className={lap.trigger === 'manual' ? 'text-caution' : 'text-ink-muted'}>
-                    {lap.trigger}
-                  </span>
-                </td>
-                <td className="py-1 pr-3">{formatDuration(s.durationS)}</td>
-                <td className="py-1 pr-3">{formatDistanceKm(s.distanceM)}</td>
-                <td className="py-1 pr-3 text-ch-hr">{formatBpm(s.avgHr)}</td>
-                <td className="py-1 pr-3 text-ch-pace">
-                  {s.avgSpeed === null ? '–' : formatPace(s.avgSpeed)}
-                </td>
-                <td className="py-1 text-ch-power">
-                  {s.avgPower === null ? '–' : Math.round(s.avgPower)}
-                </td>
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+      <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.05em] text-fg-3">Laps</h3>
+      <div className="overflow-hidden rounded-xl border border-line bg-panel">
+        <table className="w-full border-collapse text-[13px] tabular-nums">
+          <thead>
+            <tr className="border-b border-line bg-panel-2 text-left text-[11px] uppercase tracking-[0.04em] text-fg-3">
+              <th className="px-3 py-2 font-semibold">Lap</th>
+              <th className="px-3 py-2 font-semibold">Type</th>
+              <th className="px-3 py-2 font-semibold">Time</th>
+              <th className="px-3 py-2 font-semibold">Dist</th>
+              <th className="px-3 py-2 font-semibold">HR</th>
+              <th className="px-3 py-2 font-semibold">Pace</th>
+              <th className="px-3 py-2 font-semibold">Pwr</th>
+            </tr>
+          </thead>
+          <tbody className="font-mono">
+            {laps.map((lap, i) => {
+              const s = rangeSummary(activity, lap.range)
+              return (
+                <tr
+                  key={lap.index}
+                  className="border-b border-line last:border-0 transition-colors hover:bg-sunk"
+                >
+                  <td className="px-3 py-2 text-fg-3">L{i + 1}</td>
+                  <td className="px-3 py-2">
+                    <span className={lap.trigger === 'manual' ? 'text-caution' : 'text-fg-3'}>
+                      {lap.trigger}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2">{formatDuration(s.durationS)}</td>
+                  <td className="px-3 py-2">{formatDistanceKm(s.distanceM)}</td>
+                  <td className="px-3 py-2 text-ch-hr">{formatBpm(s.avgHr)}</td>
+                  <td className="px-3 py-2 text-ch-pace">
+                    {s.avgSpeed === null ? '–' : formatPace(s.avgSpeed)}
+                  </td>
+                  <td className="px-3 py-2 text-ch-power">
+                    {s.avgPower === null ? '–' : Math.round(s.avgPower)}
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
     </section>
   )
 }
