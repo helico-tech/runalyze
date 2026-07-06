@@ -33,27 +33,43 @@ function timeAtDistance(dist: Series, target: number): number {
   return t[lo - 1]! + frac * (t[lo]! - t[lo - 1]!)
 }
 
-/** Raw altitude gain/loss over a range; null when altitude is absent. */
-function elevation(a: Activity, range: TimeRange): { gain: number | null; loss: number | null } {
+/**
+ * Attributes every consecutive altitude delta to exactly one split range, so that
+ * gain/loss straddling a split seam is counted once (not dropped by both neighbors,
+ * as a naive per-split walk over the half-open range would do). Each delta is
+ * assigned to the split whose `[startS, endS)` range contains the EARLIER sample's
+ * time; since altitude timestamps and split ranges are both increasing, a single
+ * monotonic pointer suffices — no rescanning needed.
+ */
+function attributeElevation(
+  a: Activity,
+  ranges: readonly TimeRange[],
+): { gain: number | null; loss: number | null }[] {
   const alt = a.channels.altitude
-  if (!alt) return { gain: null, loss: null }
-  let gain = 0
-  let loss = 0
-  let prev: number | null = null
-  for (let i = 0; i < alt.t.length; i++) {
-    const ti = alt.t[i]!
-    if (ti < range.startS) continue
-    if (ti >= range.endS) break
-    const vi = alt.v[i]!
-    if (!Number.isFinite(vi)) continue
-    if (prev !== null) {
-      const d = vi - prev
-      if (d > 0) gain += d
-      else loss -= d
-    }
-    prev = vi
+  if (!alt || ranges.length === 0) {
+    return ranges.map(() => ({ gain: null, loss: null }))
   }
-  return { gain, loss }
+
+  const gains = new Array<number>(ranges.length).fill(0)
+  const losses = new Array<number>(ranges.length).fill(0)
+
+  let splitIdx = 0
+  for (let i = 1; i < alt.t.length; i++) {
+    const vPrev = alt.v[i - 1]!
+    const vCur = alt.v[i]!
+    if (!Number.isFinite(vPrev) || !Number.isFinite(vCur)) continue
+
+    const tPrev = alt.t[i - 1]!
+    while (splitIdx < ranges.length - 1 && tPrev >= ranges[splitIdx]!.endS) {
+      splitIdx++
+    }
+
+    const delta = vCur - vPrev
+    if (delta > 0) gains[splitIdx]! += delta
+    else if (delta < 0) losses[splitIdx]! += -delta
+  }
+
+  return ranges.map((_, i) => ({ gain: gains[i]!, loss: losses[i]! }))
 }
 
 export function computeSplits(a: Activity): Split[] {
@@ -64,23 +80,25 @@ export function computeSplits(a: Activity): Split[] {
   if (total <= 0) return []
 
   const nSplits = Math.ceil(total / SPLIT_M)
-  const splits: Split[] = []
+  const ranges: TimeRange[] = []
+  const distances: number[] = []
   for (let i = 0; i < nSplits; i++) {
     const dLo = startDist + i * SPLIT_M
     const dHi = Math.min(startDist + (i + 1) * SPLIT_M, startDist + total)
-    const range: TimeRange = { startS: timeAtDistance(dist, dLo), endS: timeAtDistance(dist, dHi) }
-    const distanceM = dHi - dLo
-    const elev = elevation(a, range)
-    splits.push({
-      index: i,
-      range,
-      distanceM,
-      partial: distanceM < SPLIT_M - 0.5,
-      summary: rangeSummary(a, range),
-      gapSpeed: gradeAdjustedSpeed(a, range),
-      elevGainM: elev.gain,
-      elevLossM: elev.loss,
-    })
+    ranges.push({ startS: timeAtDistance(dist, dLo), endS: timeAtDistance(dist, dHi) })
+    distances.push(dHi - dLo)
   }
-  return splits
+
+  const elev = attributeElevation(a, ranges)
+
+  return ranges.map((range, i) => ({
+    index: i,
+    range,
+    distanceM: distances[i]!,
+    partial: distances[i]! < SPLIT_M - 0.5,
+    summary: rangeSummary(a, range),
+    gapSpeed: gradeAdjustedSpeed(a, range),
+    elevGainM: elev[i]!.gain,
+    elevLossM: elev[i]!.loss,
+  }))
 }

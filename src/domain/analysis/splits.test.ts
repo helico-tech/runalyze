@@ -51,4 +51,53 @@ describe('computeSplits', () => {
     expect(splits[0]!.gapSpeed).toBeNull()
     expect(splits[0]!.elevGainM).toBeNull()
   })
+
+  it('counts elevation gain that straddles a split boundary (seam not dropped)', () => {
+    // Split 0/1 boundary lands at t≈333.33s (1000m at 3 m/s). Put a +50m rise
+    // exactly between the samples at t=333 and t=334, which straddles that seam.
+    const t = Array.from({ length: 901 }, (_, i) => i)
+    const a = syntheticActivity({
+      durationS: 901,
+      channels: {
+        distance: makeSeries(t, t.map((s) => s * 3)),
+        altitude: makeSeries(
+          t,
+          t.map((s) => (s < 334 ? 100 : 150)),
+        ),
+      },
+    })
+    const splits = computeSplits(a)
+    const gainSum = splits.reduce((sum, s) => sum + (s.elevGainM ?? 0), 0)
+    const lossSum = splits.reduce((sum, s) => sum + (s.elevLossM ?? 0), 0)
+    expect(gainSum).toBeCloseTo(50, 6)
+    expect(lossSum).toBeCloseTo(0, 6)
+  })
+
+  it('conserves whole-run elevation gain/loss across split seams', () => {
+    // ~2.5km at 3 m/s with a wiggly altitude profile; splits must sum to
+    // exactly what a single naive pass over the whole altitude series gets.
+    const t = Array.from({ length: 834 }, (_, i) => i)
+    const altV = t.map((s) => 100 + 10 * Math.sin(s / 20))
+    const a = syntheticActivity({
+      durationS: 834,
+      channels: {
+        distance: makeSeries(t, t.map((s) => s * 3)),
+        altitude: makeSeries(t, altV),
+      },
+    })
+    const splits = computeSplits(a)
+    const gainSum = splits.reduce((sum, s) => sum + (s.elevGainM ?? 0), 0)
+    const lossSum = splits.reduce((sum, s) => sum + (s.elevLossM ?? 0), 0)
+
+    let naiveGain = 0
+    let naiveLoss = 0
+    for (let i = 1; i < altV.length; i++) {
+      const d = altV[i]! - altV[i - 1]!
+      if (d > 0) naiveGain += d
+      else naiveLoss -= d
+    }
+
+    expect(gainSum).toBeCloseTo(naiveGain, 6)
+    expect(lossSum).toBeCloseTo(naiveLoss, 6)
+  })
 })
