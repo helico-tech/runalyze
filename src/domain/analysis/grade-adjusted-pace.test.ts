@@ -33,8 +33,8 @@ describe('gradeAdjustedSpeed', () => {
     expect(gap).toBeCloseTo(3, 2)
   })
 
-  it('slows the equivalent-flat speed on a sustained climb', () => {
-    // 3 m/s horizontal, +0.1 grade (rise 0.3 m/s): uphill → GAP speed < real speed.
+  it('raises the equivalent-flat speed on a sustained climb', () => {
+    // 3 m/s horizontal, +0.1 grade (rise 0.3 m/s): uphill → GAP speed > real speed.
     const t = Array.from({ length: 301 }, (_, i) => i)
     const a = syntheticActivity({
       durationS: 301,
@@ -44,8 +44,8 @@ describe('gradeAdjustedSpeed', () => {
       },
     })
     const gap = gradeAdjustedSpeed(a, { startS: 0, endS: 300 })!
-    expect(gap).toBeLessThan(3)
-    // factor = Cr(0)/Cr(0.1); equiv-flat speed ≈ 3 * that factor
-    expect(gap).toBeCloseTo(3 * (runningCost(0) / runningCost(0.1)), 1)
+    expect(gap).toBeGreaterThan(3)
+    // factor = Cr(0.1)/Cr(0); equiv-flat speed ≈ 3 * that factor
+    expect(gap).toBeCloseTo(3 * (runningCost(0.1) / runningCost(0)), 1)
   })
 })

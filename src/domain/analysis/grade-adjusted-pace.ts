@@ -41,7 +41,7 @@ export function gradeAdjustedSpeed(a: Activity, range: TimeRange): number | null
     if (dDist > 0) {
       const dAlt = altAt(dist.t[idx[k]!]!) - altAt(dist.t[idx[j]!]!)
       const grade = dAlt / dDist
-      equivFlat += dDist * (FLAT_COST / runningCost(grade))
+      equivFlat += dDist * (runningCost(grade) / FLAT_COST)
     }
     j = k
   }
