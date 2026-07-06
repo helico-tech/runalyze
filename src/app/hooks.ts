@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Activity, TestResult } from '../domain/model/types'
+import type { Activity, TestResult, Thresholds } from '../domain/model/types'
 import { useContainer } from './container-context'
 
 export function useActivities() {
@@ -24,4 +24,22 @@ export function useTestResults() {
   }, [repo])
   useEffect(refresh, [refresh])
   return { results, refresh }
+}
+
+export function useThresholds() {
+  const { repo } = useContainer()
+  const [thresholds, setThresholds] = useState<Thresholds | null>(null)
+  const refresh = useCallback(() => {
+    void repo.getThresholds().then(setThresholds)
+  }, [repo])
+  useEffect(refresh, [refresh])
+  const save = useCallback(
+    async (aetHr: number | null, antHr: number | null) => {
+      const t: Thresholds = { aetHr, antHr, updatedAt: new Date() }
+      await repo.saveThresholds(t)
+      setThresholds(t)
+    },
+    [repo],
+  )
+  return { thresholds, save, refresh }
 }
